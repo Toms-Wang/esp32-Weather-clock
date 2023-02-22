@@ -1,4 +1,4 @@
-/* * Data converted from D:/esp32/workspace/https_request1/main/server_root_cert.pem
+/* * Data converted from D:/esp32/workspace/https_request2/main/server_root_cert.pem
  * (null byte appended)
  */
 .data

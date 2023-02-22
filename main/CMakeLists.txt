@@ -2,19 +2,20 @@
 #
 # (If this was a component, we would set COMPONENT_EMBED_TXTFILES here.)
 
-set(src
+set(srcs 
 "https_request_example_main.c"
-../myDriver/LCD/lcd.c
 ../myDriver/LED/LED.c
-)
+../myDriver/LCD/lcd.c
+../myDriver/weather/weather.c
+ )
 
-set(inc
+set(inc 
 "."
-../myDriver/LCD/
 ../myDriver/LED/
-)
+../myDriver/LCD/
+../myDriver/weather/
+ )
 
-idf_component_register(SRCS ${src}
+idf_component_register(SRCS ${srcs}
                     INCLUDE_DIRS ${inc}
-                    EMBED_TXTFILES server_root_cert.pem local_server_cert.pem
-                    )
+                    EMBED_TXTFILES server_root_cert.pem local_server_cert.pem)

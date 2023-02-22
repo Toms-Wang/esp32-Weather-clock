@@ -6,7 +6,7 @@
 # It is included in the main 'build.ninja'.
 
 # =============================================================================
-# Project: https_request1
+# Project: https_request2
 # Configurations: 
 # =============================================================================
 # =============================================================================
@@ -14,7 +14,7 @@
 #############################################
 # Rule for compiling C files.
 
-rule C_COMPILER__https_request1.2eelf_
+rule C_COMPILER__https_request2.2eelf_
   depfile = $DEP_FILE
   deps = gcc
   command = ccache C:\Espressif\tools\xtensa-esp32-elf\esp-2021r2-patch5-8.4.0\xtensa-esp32-elf\bin\xtensa-esp32-elf-gcc.exe $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
@@ -24,7 +24,7 @@ rule C_COMPILER__https_request1.2eelf_
 #############################################
 # Rule for linking CXX executable.
 
-rule CXX_EXECUTABLE_LINKER__https_request1.2eelf_
+rule CXX_EXECUTABLE_LINKER__https_request2.2eelf_
   command = cmd.exe /C "$PRE_LINK && C:\Espressif\tools\xtensa-esp32-elf\esp-2021r2-patch5-8.4.0\xtensa-esp32-elf\bin\xtensa-esp32-elf-g++.exe $FLAGS $LINK_FLAGS @$RSP_FILE -o $TARGET_FILE  && $POST_BUILD"
   description = Linking CXX executable $TARGET_FILE
   rspfile = $RSP_FILE
@@ -1582,7 +1582,7 @@ rule C_STATIC_LIBRARY_LINKER____idf_protocol_examples_common_
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = C:\Espressif\tools\cmake\3.23.1\bin\cmake.exe --regenerate-during-build -SD:\esp32\workspace\https_request1 -BD:\esp32\workspace\https_request1\build
+  command = C:\Espressif\tools\cmake\3.23.1\bin\cmake.exe --regenerate-during-build -SD:\esp32\workspace\https_request2 -BD:\esp32\workspace\https_request2\build
   description = Re-running CMake...
   generator = 1
 

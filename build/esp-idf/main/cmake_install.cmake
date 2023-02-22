@@ -1,8 +1,8 @@
-# Install script for directory: D:/esp32/workspace/https_request1/main
+# Install script for directory: D:/esp32/workspace/https_request2/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/https_request1")
+  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/https_request2")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 

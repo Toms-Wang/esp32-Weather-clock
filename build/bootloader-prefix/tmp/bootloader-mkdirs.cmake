@@ -5,15 +5,15 @@ cmake_minimum_required(VERSION 3.5)
 
 file(MAKE_DIRECTORY
   "C:/Espressif/frameworks/esp-idf-v4.4.3/components/bootloader/subproject"
-  "D:/esp32/workspace/https_request1/build/bootloader"
-  "D:/esp32/workspace/https_request1/build/bootloader-prefix"
-  "D:/esp32/workspace/https_request1/build/bootloader-prefix/tmp"
-  "D:/esp32/workspace/https_request1/build/bootloader-prefix/src/bootloader-stamp"
-  "D:/esp32/workspace/https_request1/build/bootloader-prefix/src"
-  "D:/esp32/workspace/https_request1/build/bootloader-prefix/src/bootloader-stamp"
+  "D:/esp32/workspace/https_request2/build/bootloader"
+  "D:/esp32/workspace/https_request2/build/bootloader-prefix"
+  "D:/esp32/workspace/https_request2/build/bootloader-prefix/tmp"
+  "D:/esp32/workspace/https_request2/build/bootloader-prefix/src/bootloader-stamp"
+  "D:/esp32/workspace/https_request2/build/bootloader-prefix/src"
+  "D:/esp32/workspace/https_request2/build/bootloader-prefix/src/bootloader-stamp"
 )
 
 set(configSubDirs )
 foreach(subDir IN LISTS configSubDirs)
-    file(MAKE_DIRECTORY "D:/esp32/workspace/https_request1/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
+    file(MAKE_DIRECTORY "D:/esp32/workspace/https_request2/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
 endforeach()
