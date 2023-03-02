@@ -145,7 +145,7 @@ static uint8_t https_get_request(esp_tls_cfg_t cfg, char * pxcit, char * pxwea, 
                 		ESP_LOGI(TAG, "%s = %s", json_last_update -> string, json_last_update -> valuestring);
                 	}
                 }
-
+                cJSON_Delete(pJsonRoot);
                 ESP_LOGI(TAG, "城市：%s", pxcit);
                 //LCD_showString(32, 64, , RED);
                 //LCD_showString(32, 64, wea, RED);
