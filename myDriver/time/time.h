@@ -1,5 +1,5 @@
-#ifndef weather_H
-#define weather_H
+#ifndef time_H
+#define time_H
 
 #include <string.h>
 #include <stdlib.h>
@@ -28,14 +28,14 @@
 #endif
 
 /* Constants that aren't configurable in menuconfig */
-#define WEB_SERVER "www.howsmyssl.com"
-#define WEB_PORT "443"
-#define WEB_URL "https://api.seniverse.com/v3/weather/now.json?key=SfAutZrLlsHTBVSfN&location=shanghai&language=zh-Hans&unit=c"
-//#define WEB_Time_URL "http://quan.suning.com/getSysTime.do"
+#define WEB_TIME_SERVER "www.howsmyssl.com"
+#define WEB_TIME_PORT "443"
+//#define WEB_URL "https://api.seniverse.com/v3/weather/now.json?key=SfAutZrLlsHTBVSfN&location=shanghai&language=zh-Hans&unit=c"
+#define WEB_TIME_URL "http://quan.suning.com/getSysTime.do"
 
 
-#define SERVER_URL_MAX_SZ 256
+#define SERVER_URL_TIME_MAX_SZ 256
 
-uint8_t https_get_weather(uint8_t * pxcit, uint8_t * pxwea, uint8_t * pxtem);
+uint8_t https_get_time(uint8_t * pxtime);
 
 #endif

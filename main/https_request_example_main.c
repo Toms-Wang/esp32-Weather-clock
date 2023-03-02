@@ -33,8 +33,34 @@
 #include "cJSON.h"
 #include "lcd.h"
 #include "weather.h"
+#include "time.h"
+#include "convert.h"
 
 static const char *TAG1 = "example1";
+
+char test_chinese[] = "中文编码测试";
+char *test1;
+
+//城
+uint8_t ch_1[32] = {32,40,32,36,32,32,39,254,36,32,252,32,36,36,39,164,
+		36,164,36,168,36,168,60,144,230,146,73,42,8,70,16,130};
+//市
+uint8_t ch_2[32] = { 2,0,1,0,0,0,127,252,1,0,1,0,1,0,63,248,
+		33,8,33,8,33,8,33,8,33,40,33,16,1,0,1,0};
+//上
+uint8_t ch_3[32] = {2,0,2,0,2,0,2,0,2,0,2,0,3,248,2,0,
+		2,0,2,0,2,0,2,0,2,0,2,0,255,254,0,0};
+//海
+uint8_t ch_4[32] = {1,0,33,0,17,252,18,0,133,248,65,8,73,72,9,40,
+		23,254,17,8,226,72,34,40,35,252,32,8,32,80,0,32};
+
+//温
+uint8_t ch_5[32] = { 0,0,35,248,18,8,18,8,131,248,66,8,66,8,19,248,
+		16,0,39,252,228,164,36,164,36,164,36,164,47,254,0,0};
+
+//度
+uint8_t ch_6[32] = {1,0,0,128,63,254,34,32,34,32,63,252,34,32,34,32,
+		35,224,32,0,47,240,36,16,66,32,65,192,134,48,56,14};
 
 
 void app_main(void)
@@ -42,6 +68,9 @@ void app_main(void)
 	uint8_t cit[20] = {0};
 	uint8_t wea[20] = {0};
 	uint8_t tem[20] = {0};
+	//uint8_t tim[50] = {0};
+//	uint8_t wea_status = 0;
+//	uint8_t tim_status = 0;
     ESP_ERROR_CHECK( nvs_flash_init() );
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -53,13 +82,75 @@ void app_main(void)
 
     while(1)
     {
-    	https_get_weather(cit, wea, tem);
-    	ESP_LOGI(TAG1, "cit = %s", cit);
-    	ESP_LOGI(TAG1, "wea = %s", wea);
-    	ESP_LOGI(TAG1, "tem = %s", tem);
+    	if(https_get_weather(cit, wea, tem))
+    	{
+    		ESP_LOGI(TAG1, "cit = %s", cit);
+			ESP_LOGI(TAG1, "wea = %s", wea);
+			ESP_LOGI(TAG1, "tem = %s", tem);
+
+			Show_Dis_Chinese(40, 40, ch_1, RED);
+			Show_Dis_Chinese(56, 40, ch_2, RED);
+			LCD_showString(72, 40, (char*)":", RED);
+			Show_Dis_Chinese(80, 40, ch_3, RED);
+			Show_Dis_Chinese(96, 40, ch_4, RED);
+
+			Show_Dis_Chinese(40, 60, ch_5, RED);
+			Show_Dis_Chinese(56, 60, ch_6, RED);
+			LCD_showString(72, 60, (char*)":", RED);
+			if(strlen((char *)tem) == 1)
+			{
+				LCD_showString(80, 60, " ", RED);
+				LCD_showString(88, 60, (char*)tem, RED);
+			}
+			else
+			{
+				LCD_showString(80, 60, (char*)tem, RED);
+				Show_Dis_Chinese(96, 60, ch_6, RED);
+			}
+
+			memset((char *)tem, 0, strlen((char *)tem));
+
+    	}
+    	else
+    	{
+    		ESP_LOGI(TAG1, "weather update fail");
+    	}
+
+//    	utf82gbk(&test1, test_chinese, strlen(test_chinese));
+//
+//    	ESP_LOGI(TAG1, "len = %d", strlen(test1));
+//    	ESP_LOGI(TAG1, "len1 = %d", strlen(test_chinese));
+//    	for(int i = 0; i < strlen(test1); i++)
+//    	{
+//    		ESP_LOGI(TAG1, "0x%.2x ", (uint8_t)test1[i]);
+//    	}
+
+//    	Show_Dis_Chinese(40, 40, ch_1, RED);
+//    	Show_Dis_Chinese(56, 40, ch_2, RED);
+//    	LCD_showString(72, 40, (char*)":", RED);
+//    	Show_Dis_Chinese(80, 40, ch_3, RED);
+//    	Show_Dis_Chinese(96, 40, ch_4, RED);
+    	//LCD_ShowChinese(40, 40, test1[0], test1[1], RED);
+    	//ESP_LOGI(TAG1,"%s" ,test1);
+//    	ESP_LOGI(TAG1,"%s", test_chinese);
+//    	ESP_LOGI(TAG1,"%s", test1);
     	vTaskDelay(5000 / portTICK_PERIOD_MS);
     	vTaskDelay(5000 / portTICK_PERIOD_MS);
     	vTaskDelay(5000 / portTICK_PERIOD_MS);
     	vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+//    	if(https_get_time(tim))
+//    	{
+//    		ESP_LOGI(TAG1, "tim = %s", tim);
+//    	}
+//    	else
+//    	{
+//    		ESP_LOGI(TAG1, "tim update fail");
+//    	}
+//
+//    	vTaskDelay(5000 / portTICK_PERIOD_MS);
+//		vTaskDelay(5000 / portTICK_PERIOD_MS);
+//		vTaskDelay(5000 / portTICK_PERIOD_MS);
+//		vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
 }

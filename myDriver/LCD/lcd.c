@@ -376,3 +376,66 @@ void LCD_ShowIntNum(uint16_t x, uint16_t y, uint32_t num, uint8_t len, uint16_t 
 	}
 }
 
+//通过字模显示一个汉字；
+void Show_Dis_Chinese(uint16_t x, uint16_t y, uint8_t *ptm, uint16_t color)
+{
+	uint8_t temp, t1, t;
+	uint16_t x0 = x;
+	uint8_t csize = 32;//字节数；
+
+	for(t = 0; t < csize; t++)
+	{
+		temp = ptm[t];
+
+		for(t1 = 0; t1 < 8; t1++)
+		{
+			if(temp & 0x80)
+			{
+				LCD_drawPoint(x, y, color);
+			}
+			temp <<= 1;
+			x++;
+			if(x >= LCD_W)
+			{
+				return;
+			}
+			if((x - x0) == 16)
+			{
+				x = x0;
+				y++;
+				if(y >= LCD_H)
+				{
+					return;
+				}
+				break;
+			}
+		}
+	}
+
+}
+/**
+  * @brief LCD显示中文
+  * @param  ,x,y 字符的坐标
+  *         num 整数
+  * 		len 显示为几位
+  *         color 16位RGB颜色
+  * @retval None
+  */
+void LCD_ShowChinese(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color)
+{
+	uint8_t char_L, char_H, offset = 0;
+	uint8_t chinese_char[32] = {0};
+	if((pxchar1 & 0x80) && (pxchar2 & 0x80))
+	{
+		char_H = pxchar1 - 0xA0;
+		char_L = pxchar2 - 0xA0;
+		offset = (char_H - 1) * 94 + (char_L - 1) * 32;
+		strncpy((char*)chinese_char, (char*)(hzk16 + offset), 32);
+		Show_Dis_Chinese(x, y, chinese_char, color);
+	}
+	else
+	{
+		return;
+	}
+}
+

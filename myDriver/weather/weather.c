@@ -21,27 +21,11 @@ static const char HOWSMYSSL_REQUEST[] = "GET " WEB_URL " HTTP/1.1\r\n"
                              "User-Agent: esp-idf/1.0 esp32\r\n"
                              "\r\n";
 
-/* Root cert for howsmyssl.com, taken from server_root_cert.pem
-
-   The PEM file was extracted from the output of this command:
-   openssl s_client -showcerts -connect www.howsmyssl.com:443 </dev/null
-
-   The CA root cert is the last cert given in the chain of certs.
-
-   To embed it in the app binary, the PEM file is named
-   in the component.mk COMPONENT_EMBED_TXTFILES variable.
-*/
-extern const uint8_t server_root_cert_pem_start[] asm("_binary_server_root_cert_pem_start");
-extern const uint8_t server_root_cert_pem_end[]   asm("_binary_server_root_cert_pem_end");
-
 static uint8_t https_get_request(esp_tls_cfg_t cfg, char * pxcit, char * pxwea, char * pxtem)
 {
 	uint8_t Get_weather_status = 0;
     char buf[512];
     int ret, len;
-//    char cit[20] = {0};
-//    char wea[20] = {0};
-//    char tem[20] = {0};
 
     struct esp_tls *tls = esp_tls_conn_http_new(WEB_URL, &cfg);
 
@@ -168,8 +152,8 @@ static uint8_t https_get_request(esp_tls_cfg_t cfg, char * pxcit, char * pxwea, 
                 ESP_LOGI(TAG, "天气：%s", pxwea);
                 ESP_LOGI(TAG, "温度：%s", pxtem);
 
-                LCD_showString(32, 84, "tem:", RED);
-                LCD_showString(64, 84, pxtem, RED);
+//                LCD_showString(32, 84, "tem:", RED);
+//                LCD_showString(64, 84, pxtem, RED);
 
             }
         }
@@ -177,11 +161,11 @@ static uint8_t https_get_request(esp_tls_cfg_t cfg, char * pxcit, char * pxwea, 
 
 exit:
     esp_tls_conn_delete(tls);
-    for (int countdown = 10; countdown >= 0; countdown--)
-    {
-        ESP_LOGI(TAG, "%d...", countdown);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+//    for (int countdown = 10; countdown >= 0; countdown--)
+//    {
+//        ESP_LOGI(TAG, "%d...", countdown);
+//        vTaskDelay(1000 / portTICK_PERIOD_MS);
+//    }
     return Get_weather_status;
 }
 

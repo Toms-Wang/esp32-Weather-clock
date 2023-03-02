@@ -83,5 +83,8 @@ void LCD_Config(void);
 void LCD_showChar(uint16_t x, uint16_t y, uint8_t chr, uint16_t color);
 void LCD_showString(uint16_t x, uint16_t y, char *p, uint16_t color);
 void LCD_ShowIntNum(uint16_t x, uint16_t y, uint32_t num, uint8_t len, uint16_t color);
+void LCD_ShowChinese(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color);
+
+void Show_Dis_Chinese(uint16_t x, uint16_t y, uint8_t *ptm, uint16_t color);
 
 #endif
