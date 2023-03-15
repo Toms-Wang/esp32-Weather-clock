@@ -1,6 +1,7 @@
 #include "lcd.h"
 #include "font.h"
 #include "hzk.h"
+#include "ff.h"
 
 uint8_t PARALLEL_LINES = 16;
 spi_device_handle_t spi;
@@ -299,7 +300,7 @@ void LCD_showChar(uint16_t x, uint16_t y, uint8_t chr, uint16_t color)
 			}
 			else
 			{
-				LCD_drawPoint(x+j, y+i, BACK_COLOR);
+				//LCD_drawPoint(x+j, y+i, BACK_COLOR);
 			}
 			temp >>= 1;
 		}
@@ -411,7 +412,6 @@ void Show_Dis_Chinese(uint16_t x, uint16_t y, uint8_t *ptm, uint16_t color)
 			}
 		}
 	}
-
 }
 /**
   * @brief LCD显示中文
@@ -421,16 +421,21 @@ void Show_Dis_Chinese(uint16_t x, uint16_t y, uint8_t *ptm, uint16_t color)
   *         color 16位RGB颜色
   * @retval None
   */
-void LCD_ShowChinese(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color)
+void LCD_ShowChinese(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color, FILE * fp)
 {
-	uint8_t char_L, char_H, offset = 0;
+	uint8_t  char_L = 0, char_H = 0;
+	uint32_t offset = 0;
 	uint8_t chinese_char[32] = {0};
+
 	if((pxchar1 & 0x80) && (pxchar2 & 0x80))
 	{
 		char_H = pxchar1 - 0xA0;
 		char_L = pxchar2 - 0xA0;
-		offset = (char_H - 1) * 94 + (char_L - 1) * 32;
-		strncpy((char*)chinese_char, (char*)(hzk16 + offset), 32);
+		offset = ((char_H - 1) * 94 + (char_L - 1)) * 32;
+
+		fseek(fp, offset, SEEK_SET);
+		fread(chinese_char, 1, 32, fp);
+
 		Show_Dis_Chinese(x, y, chinese_char, color);
 	}
 	else
@@ -439,3 +444,135 @@ void LCD_ShowChinese(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, u
 	}
 }
 
+#define MOUNT_POINT "/sdcard"
+char *ch_str;
+uint8_t adat[32] = {0};
+//中英文混合显示；
+void Display_CE(uint16_t xes, uint16_t yes, char * Str, uint16_t color)
+{
+	uint8_t wk_ucTem = 0;
+	uint8_t wk_ucKem = 0;
+	uint32_t wk_uLOffset = 0;
+	uint8_t wk_ucStr = 0;
+
+	FILE *ftp = NULL;
+	uint8_t FTP_ucStr = 0;
+	uint8_t ucRes;
+
+	uint8_t i = 0;
+	uint8_t len = 0;
+
+	uint16_t ex = xes;
+	uint16_t ey = yes;
+	uint16_t x0 = xes;
+
+	uint32_t brt;
+
+	printf("string size too long\n");
+
+	if(strlen(Str) > (100 - 1))
+	{
+		printf("string size too long");
+	}
+
+	printf("string size too long\n");
+	utf82gbk(&ch_str, Str, strlen(Str));
+
+	len = strlen((char *)ch_str);
+
+	printf("%s\n", ch_str);
+	printf("len = %d\n", len);
+	printf("2\n");
+
+	for(i = 0; i < len; i++)
+	{
+		printf("3\n");
+		if((ex + 16) >= 240)
+		{
+			ex = x0;
+			ey += 16;
+		}
+
+		if((ey + 16) >= 320)
+		{
+			return;
+		}
+
+		if(ch_str[i] & 0x80)//判断是否有中文；
+		{
+			printf("4\n");
+			if(FTP_ucStr == 0)
+			{
+				printf("5\n");
+				printf("nf_open join");
+
+				const char *file_hello = MOUNT_POINT"/HZK16.txt";
+				ftp = fopen(file_hello, "rb");
+
+				FTP_ucStr = 1;
+			}
+
+			wk_ucTem = (ch_str[i]) - 160;		//区码;
+			wk_ucKem = (ch_str[i + 1]) - 160;		//位码;
+			wk_uLOffset = ((wk_ucTem - 1) * 94 + (wk_ucKem - 1)) * 32; 	//偏移量;
+
+			fseek(ftp, wk_uLOffset, SEEK_SET);
+			fread(adat, 1, 32, ftp);
+
+			Show_Dis_Chinese(ex, ey, adat, color);
+
+			ex += 16;
+			i++;
+		}
+		else//英文；
+		{
+			LCD_showChar(ex, ey, ch_str[i], color);
+			ex += 8;
+		}
+	}
+
+	if(FTP_ucStr != 0)
+	{
+		fclose(ftp);
+	}
+}
+
+//显示背景图片；
+void LCD_Display(uint8_t xes, uint8_t yes, const uint8_t *pic)
+{
+	uint8_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
+	uint8_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
+	LCD_setAddress(xes, yes, xes + width - 1, yes + height - 1);
+	for(int i = 0; i < height; i++)
+	{
+		for(int j = 0; j < width; j++)
+		{
+			lcd_color(((uint16_t)(pic[8 + (i * width + j) * 2]) << 8) | pic[8 + (i * width + j) * 2 + 1]);
+		}
+	}
+}
+//显示天气局部图；
+void LCD_Display_Icon(uint8_t xes, uint8_t yes, const uint8_t *pic, const uint8_t *back)
+{
+	uint16_t color = 0;
+	uint8_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
+	uint8_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
+	LCD_setAddress(xes, yes, xes + width - 1, yes + height - 1);
+	for(int i = 0; i < height; i++)
+	{
+		for(int j = 0; j < width; j++)
+		{
+			color = ((uint16_t)(pic[8 + (i * width + j) * 2]) << 8) | pic[8 + (i * width + j) * 2 + 1];
+			if(color == 0xFFFF)
+			{
+				color = ((uint16_t)(back[8 + ((i + yes) * 128 + j + xes) * 2]) << 8) | back[8 + ((i + yes) * 128 + j + xes) * 2 + 1];
+			}
+//			else
+//			{
+//				color = YELLOW;
+//			}
+
+			lcd_color(color);
+		}
+	}
+}

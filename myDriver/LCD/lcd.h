@@ -9,6 +9,8 @@
 #include "driver/spi_master.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "convert.h"
+
 
 #define WHITE            0xFFFF
 #define BLACK            0x0000
@@ -40,7 +42,6 @@
 #define LCD_W 128
 #define LCD_H 128
 
-#ifdef CONFIG_IDF_TARGET_ESP32
 #define LCD_HOST    HSPI_HOST
 
 #define PIN_NUM_MISO 25
@@ -53,29 +54,6 @@
 #define PIN_NUM_RST  18
 #define PIN_NUM_BCKL 15
 
-#elif defined CONFIG_IDF_TARGET_ESP32S2
-#define LCD_HOST    SPI2_HOST
-
-#define PIN_NUM_MISO 37
-#define PIN_NUM_MOSI 35
-#define PIN_NUM_CLK  36
-#define PIN_NUM_CS   34
-
-#define PIN_NUM_DC   4
-#define PIN_NUM_RST  5
-#define PIN_NUM_BCKL 6
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-#define LCD_HOST    SPI2_HOST
-
-#define PIN_NUM_MISO 2
-#define PIN_NUM_MOSI 7
-#define PIN_NUM_CLK  6
-#define PIN_NUM_CS   10
-
-#define PIN_NUM_DC   9
-#define PIN_NUM_RST  4
-#define PIN_NUM_BCKL 5
-#endif
 
 void LCD_clear(uint16_t color);
 void LCD_Fill(uint16_t color);
@@ -83,8 +61,14 @@ void LCD_Config(void);
 void LCD_showChar(uint16_t x, uint16_t y, uint8_t chr, uint16_t color);
 void LCD_showString(uint16_t x, uint16_t y, char *p, uint16_t color);
 void LCD_ShowIntNum(uint16_t x, uint16_t y, uint32_t num, uint8_t len, uint16_t color);
-void LCD_ShowChinese(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color);
+//void LCD_ShowChinese(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color);
 
 void Show_Dis_Chinese(uint16_t x, uint16_t y, uint8_t *ptm, uint16_t color);
+void LCD_ShowChinese(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color, FILE * fp);
+
+void LCD_Display(uint8_t xes, uint8_t yes, const uint8_t *pic);
+void LCD_Display_Icon(uint8_t xes, uint8_t yes, const uint8_t *pic, const uint8_t *back);
+
+void Display_CE(uint16_t xes, uint16_t yes, char * Str, uint16_t color);
 
 #endif

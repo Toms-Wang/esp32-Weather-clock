@@ -167,7 +167,7 @@ static uint8_t https_get_time_request(esp_tls_cfg_t cfg, char * pxtime)
     } while (1);
 
 exit:
-    esp_tls_conn_delete(tls);
+    //esp_tls_conn_delete(tls);
     for (int countdown = 10; countdown >= 0; countdown--)
     {
         ESP_LOGI(TAG, "%d...", countdown);
