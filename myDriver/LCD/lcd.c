@@ -3,6 +3,8 @@
 #include "hzk.h"
 #include "ff.h"
 
+#define MOUNT_POINT "/sdcard"
+
 uint8_t PARALLEL_LINES = 16;
 spi_device_handle_t spi;
 uint16_t BACK_COLOR = WHITE;//默认背景色；
@@ -444,20 +446,18 @@ void LCD_ShowChinese(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, u
 	}
 }
 
-#define MOUNT_POINT "/sdcard"
-char *ch_str;
-uint8_t adat[32] = {0};
 //中英文混合显示；
 void Display_CE(uint16_t xes, uint16_t yes, char * Str, uint16_t color)
 {
+	char *ch_str;
+	uint8_t adat[32] = {0};
+
 	uint8_t wk_ucTem = 0;
 	uint8_t wk_ucKem = 0;
 	uint32_t wk_uLOffset = 0;
-	uint8_t wk_ucStr = 0;
 
 	FILE *ftp = NULL;
 	uint8_t FTP_ucStr = 0;
-	uint8_t ucRes;
 
 	uint8_t i = 0;
 	uint8_t len = 0;
@@ -466,27 +466,17 @@ void Display_CE(uint16_t xes, uint16_t yes, char * Str, uint16_t color)
 	uint16_t ey = yes;
 	uint16_t x0 = xes;
 
-	uint32_t brt;
-
-	printf("string size too long\n");
-
 	if(strlen(Str) > (100 - 1))
 	{
 		printf("string size too long");
 	}
 
-	printf("string size too long\n");
 	utf82gbk(&ch_str, Str, strlen(Str));
 
-	len = strlen((char *)ch_str);
-
-	printf("%s\n", ch_str);
-	printf("len = %d\n", len);
-	printf("2\n");
+	len = strlen(ch_str);
 
 	for(i = 0; i < len; i++)
 	{
-		printf("3\n");
 		if((ex + 16) >= 240)
 		{
 			ex = x0;
@@ -500,12 +490,8 @@ void Display_CE(uint16_t xes, uint16_t yes, char * Str, uint16_t color)
 
 		if(ch_str[i] & 0x80)//判断是否有中文；
 		{
-			printf("4\n");
 			if(FTP_ucStr == 0)
 			{
-				printf("5\n");
-				printf("nf_open join");
-
 				const char *file_hello = MOUNT_POINT"/HZK16.txt";
 				ftp = fopen(file_hello, "rb");
 
