@@ -39,8 +39,8 @@
 #define LGRAYBLUE        0XA651 //浅灰蓝色(中间层颜色)
 #define LBBLUE           0X2B12 //浅棕蓝色(选择条目的反色)
 
-#define LCD_W 128
-#define LCD_H 128
+#define LCD_W 240
+#define LCD_H 320
 
 #define LCD_HOST    HSPI_HOST
 
@@ -58,6 +58,8 @@
 void LCD_clear(uint16_t color);
 void LCD_Fill(uint16_t color);
 void LCD_Config(void);
+void LCD_Config_ST7789(void);
+
 void LCD_showChar(uint16_t x, uint16_t y, uint8_t chr, uint16_t color);
 void LCD_showString(uint16_t x, uint16_t y, char *p, uint16_t color);
 void LCD_ShowIntNum(uint16_t x, uint16_t y, uint32_t num, uint8_t len, uint16_t color);
@@ -76,6 +78,12 @@ void LCD_ShowChinese_C(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2,
 void LCD_Display_52(uint8_t xes, uint8_t yes, const uint8_t *back);
 
 //void LCD_Display_bmp1(uint8_t xes, uint8_t yes, const uint8_t *back);
-void LCD_Display_bmp(uint8_t xes, uint8_t yes, char * pname, const uint8_t *back);
+void LCD_Display_bmp(uint8_t xes, uint8_t yes, char * pname, const uint8_t *back, uint16_t * z_xes, uint16_t * z_yes);
+
+
+
+void Display_CE_bc(uint16_t xes, uint16_t yes, char * Str, uint16_t color, const uint8_t * back);
+void Show_Dis_Chinese_bc(uint16_t x, uint16_t y, uint8_t *ptm, uint16_t color, const uint8_t * back);
+void LCD_ShowChinese_C_bc(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color, const uint8_t * back);
 
 #endif

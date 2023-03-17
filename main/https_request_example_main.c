@@ -45,6 +45,7 @@
 #include "bmp4_1.h"
 #include "bmp5_2.h"
 #include "bmp1.h"
+#include "bmp320.h"
 
 #include "sdmmc_cmd.h"
 #include "esp_vfs_fat.h"
@@ -84,6 +85,10 @@ void lcd_flash_task(void * parm)
 	uint8_t tem[20] = {0};
 	uint8_t tem1[20] = {0};
 	int flash_state = 0;
+
+	uint16_t p_x = 0;
+	uint16_t p_y = 0;
+
 	while(1)
 	{
 		//ESP_LOGI(TAG1, "task join in");
@@ -105,28 +110,63 @@ void lcd_flash_task(void * parm)
 						if(strcmp((char *)tem_bmp[i], (char *)wea) == 0)
 						{
 							printf("i = %d\n", i);
-							//LCD_Display(0, 	0, gImage_bmp3);
-							LCD_Display_bmp(4, 4, (char *)tem_name[i], gImage_bmp3);
+//							LCD_Display(0, 	0, gImage_bmp3);
+							LCD_Display_bmp(120, 0, (char *)tem_name[i], gImage_bmp320, &p_x, &p_y);
+							printf("p_x = %d, p_y = %d\n", p_x, p_y);
 						}
 					}
 
-					Display_CE(16, 28, (char *)cit, WHITE);
-					Display_CE(82 - strlen((char*)wea) / 3 * 16, 55, (char *)wea, WHITE);
+//					Display_CE(44, 52, (char *)cit, WHITE);
+					Display_CE_bc(44, 52, (char *)cit, WHITE, gImage_bmp320);
 
-					if(strlen((char *)tem) == 1)
+					if((strlen((char *)wea) /3 ) > 5)
 					{
-						strcpy((char *)tem1, " ");
-						strcpy((char *)tem1 + 1, (char *)tem);
-						//strcpy((char *)tem1 + 2, "度");
-						Display_CE(86, 55, (char *)tem1, WHITE);
-						LCD_ShowChinese_C(102, 55, 0xA1, 0xE6, WHITE);
+//						Display_CE(p_x - strlen((char*)wea) / 3 * 16 / 2, p_y + 8, (char *)wea, WHITE);
+//						Display_CE(p_x - strlen((char*)wea) / 3 * 16 / 2, 120, (char *)wea, WHITE);
+						Display_CE_bc(p_x - strlen((char*)wea) / 3 * 16 / 2, 120, (char *)wea, WHITE, gImage_bmp320);
+
+						if(strlen((char *)tem) == 1)
+						{
+							strcpy((char *)tem1, " ");
+							strcpy((char *)tem1 + 1, (char *)tem);
+						}
+						else
+						{
+							strcpy((char *)tem1, (char *)tem);
+						}
+
+//						Display_CE(p_x - 2 * 8, 144, (char *)tem1, WHITE);
+//						LCD_ShowChinese_C(p_x, 144 , 0xA1, 0xE6, WHITE);
+						Display_CE_bc(p_x - 2 * 8, 144, (char *)tem1, WHITE, gImage_bmp320);
+						LCD_ShowChinese_C_bc(p_x, 144 , 0xA1, 0xE6, WHITE, gImage_bmp320);
+//						Display_CE(p_x - 2 * 8, p_y + 8 + 16, (char *)tem1, WHITE);
+//						LCD_ShowChinese_C(p_x, p_y + 8 + 16 , 0xA1, 0xE6, WHITE);
 					}
 					else
 					{
-						strcpy((char *)tem1, (char *)tem);
-						//strcpy((char *)tem1 + 2, "度");
-						Display_CE(86, 55, (char *)tem1, WHITE);
-						LCD_ShowChinese_C(102, 55, 0xA1, 0xE6, WHITE);
+//						Display_CE(p_x - (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2, p_y + 8, (char *)wea, WHITE);
+//						Display_CE(p_x - (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2, 120, (char *)wea, WHITE);
+
+						Display_CE_bc(p_x - (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2, 120, (char *)wea, WHITE, gImage_bmp320);
+
+						if(strlen((char *)tem) == 1)
+						{
+							strcpy((char *)tem1, " ");
+							strcpy((char *)tem1 + 1, (char *)tem);
+						}
+						else
+						{
+							strcpy((char *)tem1, (char *)tem);
+						}
+
+//						Display_CE(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 4 * 8 , p_y + 8, (char *)tem1, WHITE);
+//						LCD_ShowChinese_C(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 2 * 8, p_y + 8, 0xA1, 0xE6, WHITE);
+
+//						Display_CE(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 4 * 8 , 120, (char *)tem1, WHITE);
+//						LCD_ShowChinese_C(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 2 * 8, 120, 0xA1, 0xE6, WHITE);
+
+						Display_CE_bc(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 4 * 8 , 120, (char *)tem1, WHITE, gImage_bmp320);
+						LCD_ShowChinese_C_bc(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 2 * 8, 120, 0xA1, 0xE6, WHITE, gImage_bmp320);
 					}
 
 					memset((char *)tem, 0, strlen((char *)tem));
@@ -136,9 +176,6 @@ void lcd_flash_task(void * parm)
 				{
 					ESP_LOGI(TAG1, "weather update fail");
 				}
-
-				//Display_CE(0, 80, test_chinese, WHITE);
-				//Display_CE(0, 100, "℃", WHITE);
 
 				for(int j = 0; j < 15; j++)
 				{
@@ -158,20 +195,18 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    LCD_Config();
+    //LCD_Config();
+    LCD_Config_ST7789();
+
     spi_SD_init();
 
-    LCD_Fill(WHITE);
-    LCD_Display(0, 	0, gImage_bmp3);
-
-    //LCD_Display_Icon(60, 7, gImage_bmp5_2, gImage_bmp3);gImage_bmp1
-
-    //LCD_Display_Icon(0, 0, gImage_bmp1, gImage_bmp3);
-
-    //LCD_Display_52(60, 7, gImage_bmp3);
+    //LCD_Fill(WHITE);
+    LCD_Display(0, 	0, gImage_bmp320);
 
     char str[15] = {0};
     char filename[50] = {0};
+    uint16_t z_x = 0;
+    uint16_t z_y = 0;
 
 	for(int i = 0; i < 37; i++)
 	{
@@ -179,12 +214,14 @@ void app_main(void)
 		strcpy(filename, "/bmp");
 		strcpy(filename + 4, str);
 		strcpy(filename + 4 + strlen(str), ".txt");
-		//LCD_Display(0, 	0, gImage_bmp3);
-		LCD_Display_bmp(4, 4, (char *)filename, gImage_bmp3);
+		//LCD_Display(0, 0, gImage_bmp3);//背景；
+		LCD_Display_bmp(120, 0, (char *)filename, gImage_bmp320, &z_x, &z_y);
+
+		printf("p_x = %d, p_y = %d\n", z_x, z_y);
 		vTaskDelay(300 / portTICK_PERIOD_MS);
 	}
 
-    LCD_Display_bmp(4, 4, (char *)"/bmp2.txt", gImage_bmp3);
+    LCD_Display_bmp(120, 0, (char *)"/bmp2.txt", gImage_bmp320, &z_x, &z_y);
 
     Led_Config();
     LED_OFF();

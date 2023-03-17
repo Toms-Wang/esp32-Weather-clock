@@ -37,7 +37,7 @@ void spi_LCD_init(void)
 	spi_device_interface_config_t devcfg =
 	{
 		.clock_speed_hz=26*1000*1000,
-		.mode=0,                                //SPI mode 0
+		.mode=2,                                //SPI mode 0
 		.spics_io_num=PIN_NUM_CS,               //CS pin
 		.queue_size=7,                          //We want to be able to queue 7 transactions at a time
 		.pre_cb=lcd_spi_pre_transfer_callback,  //Specify pre-transfer callback to handle D/C line
@@ -126,11 +126,11 @@ void lcd_long_data(const uint8_t *pdata, int len)
 void LCD_setAddress(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
 	lcd_cmd(0x2a);
-	lcd_color(x1 + 2);
-	lcd_color(x2 + 2);
+	lcd_color(x1);
+	lcd_color(x2);
 	lcd_cmd(0x2b);
-	lcd_color(y1 + 3);
-	lcd_color(y2 + 3);
+	lcd_color(y1);
+	lcd_color(y2);
 	lcd_cmd(0x2c);
 }
 
@@ -172,6 +172,106 @@ void LCD_Fill(uint16_t color)
 	}
 }
 
+void LCD_Config_ST7789(void)
+{
+	spi_LCD_init();//初始化SPI;
+	LCD_GPIO_Init();//初始化GPIO;
+	//LCD_RES_Clr();
+	gpio_set_level(PIN_NUM_RST, 0);
+	vTaskDelay(100 / portTICK_RATE_MS);
+	//LCD_RES_Set();
+	gpio_set_level(PIN_NUM_RST, 1);
+	vTaskDelay(100 / portTICK_RATE_MS);
+
+	gpio_set_level(PIN_NUM_BCKL, 1);
+	vTaskDelay(100 / portTICK_RATE_MS);
+
+	lcd_cmd(0x11);
+	vTaskDelay(120 / portTICK_RATE_MS);
+
+	lcd_cmd(0xB2);
+	lcd_data(0x0C);
+	lcd_data(0x0C);
+	lcd_data(0x00);
+	lcd_data(0x33);
+	lcd_data(0x33);
+
+	lcd_cmd(0x35);
+	lcd_data(0x00);
+
+	lcd_cmd(0x36);
+	lcd_data(0x00);
+
+	lcd_cmd(0x3A);
+	lcd_data(0x55);
+
+	lcd_cmd(0xB7);
+	lcd_data(0x35);
+
+	lcd_cmd(0xBB);
+	lcd_data(0x2D);
+
+	lcd_cmd(0xC0);
+	lcd_data(0x2C);
+
+	lcd_cmd(0xC2);
+	lcd_data(0x01);
+
+	lcd_cmd(0xC3);
+	lcd_data(0x15);
+
+	lcd_cmd(0xC4);
+	lcd_data(0x20);
+
+	lcd_cmd(0xC6);
+	lcd_data(0x01);
+	//lcd_data(0x0F);
+
+	lcd_cmd(0xD0);
+	lcd_data(0xA4);
+	lcd_data(0xA1);
+
+	lcd_cmd(0xD6);
+	lcd_data(0xA1);
+
+	lcd_cmd(0xE0);
+	lcd_data(0x70);
+	lcd_data(0x05);
+	lcd_data(0x0A);
+	lcd_data(0x0B);
+	lcd_data(0x0A);
+	lcd_data(0x27);
+	lcd_data(0x2F);
+	lcd_data(0x44);
+	lcd_data(0x47);
+	lcd_data(0x37);
+	lcd_data(0x14);
+	lcd_data(0x14);
+	lcd_data(0x29);
+	lcd_data(0x2F);
+
+	lcd_cmd(0xE1);
+	lcd_data(0x70);
+	lcd_data(0x07);
+	lcd_data(0x0C);
+	lcd_data(0x08);
+	lcd_data(0x08);
+	lcd_data(0x04);
+	lcd_data(0x2F);
+	lcd_data(0x33);
+	lcd_data(0x46);
+	lcd_data(0x18);
+	lcd_data(0x15);
+	lcd_data(0x15);
+	lcd_data(0x2B);
+	lcd_data(0x2D);
+
+	lcd_cmd(0x21);
+
+	lcd_cmd(0x29);
+
+	lcd_cmd(0x2C);
+}
 
 void LCD_Config(void)
 {
@@ -476,6 +576,7 @@ void LCD_ShowChinese_C(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2,
 		return;
 	}
 }
+
 //中英文混合显示；
 void Display_CE(uint16_t xes, uint16_t yes, char * Str, uint16_t color)
 {
@@ -553,12 +654,16 @@ void Display_CE(uint16_t xes, uint16_t yes, char * Str, uint16_t color)
 	}
 }
 
+
+/****************************************************************************************************
+ * 下面的函数是图片显示，显示图标不影响背景；
+ ***************************************************************************************************/
 //显示背景图片；
 void LCD_Display(uint8_t xes, uint8_t yes, const uint8_t *pic)
 {
 	int len = 0;
-	uint8_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
-	uint8_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
+	uint16_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
+	uint16_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
 	LCD_setAddress(xes, yes, xes + width - 1, yes + height - 1);
 
 	len = width * height * 2;
@@ -575,7 +680,11 @@ void LCD_Display(uint8_t xes, uint8_t yes, const uint8_t *pic)
 		{
 			lcd_long_data(pic + 8 + j * SPI_MAX_NUM, SPI_MAX_NUM);
 		}
-		lcd_long_data(pic + 8 + num * SPI_MAX_NUM, tum);
+
+		if(tum != 0)
+		{
+			lcd_long_data(pic + 8 + num * SPI_MAX_NUM, tum);
+		}
 	}
 
 //	for(int i = 0; i < height; i++)
@@ -593,8 +702,8 @@ void LCD_Display_Icon(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t *bac
 {
 	//uint16_t color = 0;
 	int len = 0;
-	uint8_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
-	uint8_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
+	uint16_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
+	uint16_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
 	LCD_setAddress(xes, yes, xes + width - 1, yes + height - 1);
 	len = width * height * 2;
 
@@ -630,7 +739,12 @@ void LCD_Display_Icon(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t *bac
 		{
 			lcd_long_data(pic + 8 + j * SPI_MAX_NUM, SPI_MAX_NUM);
 		}
-		lcd_long_data(pic + 8 + num * SPI_MAX_NUM, tum);
+
+		if(tum != 0)
+		{
+			lcd_long_data(pic + 8 + num * SPI_MAX_NUM, tum);
+		}
+
 	}
 
 
@@ -655,19 +769,22 @@ void LCD_Display_Icon(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t *bac
 }
 
 //显示天气局部图；
-void LCD_Display_Icon_cen(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t *back)
+void LCD_Display_Icon_cen(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t *back, uint16_t * z_xes, uint16_t * z_yes)
 {
 	int W_f = 0;
 	int H_f = 0;
 
 	int len = 0;
-	uint8_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
-	uint8_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
+	uint16_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
+	uint16_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
 	LCD_setAddress(xes, yes, xes + 120 - 1, yes + 120 - 1);
 	len = width * height * 2;
 
 	W_f = (120 - width) / 2;
 	H_f = (120 - height) / 2;
+
+	*z_yes = yes + H_f + height;
+	*z_xes = xes + W_f + width / 2;
 
 	for(int i = 0; i < height; i++)//将白色替换为背景色；
 	{
@@ -675,8 +792,8 @@ void LCD_Display_Icon_cen(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t 
 		{
 			if(pic[8 + (i * width + j) * 2] == 0xFF && pic[8 + (i * width + j) * 2 + 1] == 0xFF)
 			{
-				pic[8 + (i * width + j) * 2] = back[8 + ((i + yes + H_f) * 128 + j + xes + W_f) * 2];
-				pic[8 + (i * width + j) * 2 + 1] = back[8 + ((i + yes+ H_f) * 128 + j + xes+ W_f) * 2 + 1];
+				pic[8 + (i * width + j) * 2] = back[8 + ((i + yes + H_f) * LCD_W + j + xes + W_f) * 2];
+				pic[8 + (i * width + j) * 2 + 1] = back[8 + ((i + yes+ H_f) * LCD_W + j + xes+ W_f) * 2 + 1];
 			}
 
 		}
@@ -693,8 +810,8 @@ void LCD_Display_Icon_cen(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t 
 			}
 			else
 			{
-				bmp53[(i * 120 + j) * 2] = back[8 + ((i + yes) * 128 + j + xes) * 2];
-				bmp53[(i * 120 + j) * 2 + 1] = back[8 + ((i + yes) * 128 + j + xes) * 2 + 1];
+				bmp53[(i * 120 + j) * 2] = back[8 + ((i + yes) * LCD_W + j + xes) * 2];
+				bmp53[(i * 120 + j) * 2 + 1] = back[8 + ((i + yes) * LCD_W + j + xes) * 2 + 1];
 			}
 		}
 	}
@@ -709,12 +826,43 @@ void LCD_Display_Icon_cen(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t 
 	{
 		int num = len /(1024 * 10);
 		int tum = len %(1024 * 10);
+
 		for(int j = 0; j < num; j++)
 		{
 			lcd_long_data(bmp53 + j * SPI_MAX_NUM, SPI_MAX_NUM);
 		}
-		lcd_long_data(bmp53 + num * SPI_MAX_NUM, tum);
+
+		if(tum != 0)
+		{
+			lcd_long_data(bmp53 + num * SPI_MAX_NUM, tum);
+		}
 	}
+}
+
+
+void LCD_Display_bmp(uint8_t xes, uint8_t yes, char * pname, const uint8_t *back, uint16_t * z_xes, uint16_t * z_yes)
+{
+	FILE * fp = NULL;
+	uint32_t num_Len = 0;
+	char fname[50] = {0};
+	strcpy(fname, MOUNT_POINT);
+	strcpy(fname + strlen((char *)MOUNT_POINT), pname);
+	//const char *file_name = MOUNT_POINT"/bmp3.txt";
+
+	fp = fopen(fname, "rb");
+	if(fp == NULL)
+	{
+		printf("fp == NULL");
+	}
+	fseek(fp, 0, SEEK_END);
+
+	num_Len = ftell(fp);//求字节长度；全文字节数；
+	fseek(fp, 0, SEEK_SET);
+	fread(bmp52, 1, num_Len, fp);
+	//LCD_Display_Icon(xes, yes, bmp52, back);
+	LCD_Display_Icon_cen(xes, yes, bmp52, back, z_xes, z_yes);
+
+	fclose(fp);
 }
 
 void LCD_Display_52(uint8_t xes, uint8_t yes, const uint8_t *back)
@@ -737,27 +885,196 @@ void LCD_Display_52(uint8_t xes, uint8_t yes, const uint8_t *back)
 	fclose(fp);
 }
 
-void LCD_Display_bmp(uint8_t xes, uint8_t yes, char * pname, const uint8_t *back)
+/****************************************************************************************************
+ * 下面函数是带背景的字体显示；
+ ***************************************************************************************************/
+
+//显示中英文字体，字体改变背景不变；
+void LCD_showChar_bc(uint16_t x, uint16_t y, uint8_t chr, uint16_t color, const uint8_t * back)
 {
-	FILE * fp = NULL;
-	uint32_t num_Len = 0;
-	char fname[50] = {0};
-	strcpy(fname, MOUNT_POINT);
-	strcpy(fname + strlen((char *)MOUNT_POINT), pname);
-	//const char *file_name = MOUNT_POINT"/bmp3.txt";
-
-	fp = fopen(fname, "rb");
-	if(fp == NULL)
+	uint8_t i, j;
+	uint8_t temp;
+	chr = chr - ' ';
+	LCD_setAddress(x, y, x+8-1, y+16-1);
+	for(i=0; i<16; i++)
 	{
-		printf("fp == NULL");
+		temp = asc2_1608[chr][i];
+		for(j=0; j<8; j++)
+		{
+			if(temp&0x01)
+			{
+				LCD_drawPoint(x+j, y+i, color);
+			}
+			else
+			{
+				LCD_drawPoint(x+j, y+i, (uint16_t)(back[8 + ((i + y) * LCD_W + j + x) * 2]) << 8 | (back[8 + ((i + y) * LCD_W + j + x) * 2 + 1]));
+				//LCD_drawPoint(x+j, y+i, BACK_COLOR);
+			}
+			temp >>= 1;
+		}
 	}
-	fseek(fp, 0, SEEK_END);
+}
 
-	num_Len = ftell(fp);//求字节长度；全文字节数；
-	fseek(fp, 0, SEEK_SET);
-	fread(bmp52, 1, num_Len, fp);
-	//LCD_Display_Icon(xes, yes, bmp52, back);
-	LCD_Display_Icon_cen(xes, yes, bmp52, back);
+void LCD_showString_bc(uint16_t x, uint16_t y, char *p, uint16_t color, const uint8_t * back)
+{
+	while(*p!='\0')
+	{
+		if(x>LCD_W-16)
+		{
+			x=0;
+			y+=16;
+		}
+		if(y>LCD_H-16)
+		{
+			y=x=0;
+			LCD_clear(BACK_COLOR);
+		}
+		LCD_showChar_bc(x, y, *p, color, back);
+		x+=8;
+		p++;
+	}
+}
 
-	fclose(fp);
+//通过字模显示一个汉字；
+void Show_Dis_Chinese_bc(uint16_t x, uint16_t y, uint8_t *ptm, uint16_t color, const uint8_t * back)
+{
+	uint8_t temp, t1, t;
+	uint16_t x0 = x;
+	uint8_t csize = 32;//字节数；
+
+	for(t = 0; t < csize; t++)
+	{
+		temp = ptm[t];
+
+		for(t1 = 0; t1 < 8; t1++)
+		{
+			if(temp & 0x80)
+			{
+				LCD_drawPoint(x, y, color);
+			}
+			else
+			{
+				LCD_drawPoint(x, y, (uint16_t)(back[8 + (y * LCD_W + x) * 2]) << 8 | (back[8 + (y * LCD_W + x) * 2 + 1]));
+			}
+			temp <<= 1;
+			x++;
+			if(x >= LCD_W)
+			{
+				return;
+			}
+			if((x - x0) == 16)
+			{
+				x = x0;
+				y++;
+				if(y >= LCD_H)
+				{
+					return;
+				}
+				break;
+			}
+		}
+	}
+}
+
+void Display_CE_bc(uint16_t xes, uint16_t yes, char * Str, uint16_t color, const uint8_t * back)
+{
+	char *ch_str;
+	uint8_t adat[32] = {0};
+
+	uint8_t wk_ucTem = 0;
+	uint8_t wk_ucKem = 0;
+	uint32_t wk_uLOffset = 0;
+
+	FILE *ftp = NULL;
+	uint8_t FTP_ucStr = 0;
+
+	uint8_t i = 0;
+	uint8_t len = 0;
+
+	uint16_t ex = xes;
+	uint16_t ey = yes;
+	uint16_t x0 = xes;
+
+	if(strlen(Str) > (100 - 1))
+	{
+		printf("string size too long");
+	}
+
+	utf82gbk(&ch_str, Str, strlen(Str));
+
+	len = strlen(ch_str);
+
+	for(i = 0; i < len; i++)
+	{
+		if((ex + 16) >= 240)
+		{
+			ex = x0;
+			ey += 16;
+		}
+
+		if((ey + 16) >= 320)
+		{
+			return;
+		}
+
+		if(ch_str[i] & 0x80)//判断是否有中文；
+		{
+			if(FTP_ucStr == 0)
+			{
+				const char *file_hello = MOUNT_POINT"/HZK16.txt";
+				ftp = fopen(file_hello, "rb");
+
+				FTP_ucStr = 1;
+			}
+
+			wk_ucTem = (ch_str[i]) - 160;		//区码;
+			wk_ucKem = (ch_str[i + 1]) - 160;		//位码;
+			wk_uLOffset = ((wk_ucTem - 1) * 94 + (wk_ucKem - 1)) * 32; 	//偏移量;
+
+			fseek(ftp, wk_uLOffset, SEEK_SET);
+			fread(adat, 1, 32, ftp);
+
+			Show_Dis_Chinese_bc(ex, ey, adat, color, back);
+
+			ex += 16;
+			i++;
+		}
+		else//英文；
+		{
+			LCD_showChar_bc(ex, ey, ch_str[i], color, back);
+			ex += 8;
+		}
+	}
+
+	if(FTP_ucStr != 0)
+	{
+		fclose(ftp);
+	}
+}
+
+void LCD_ShowChinese_C_bc(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color, const uint8_t * back)
+{
+	uint8_t  char_L = 0, char_H = 0;
+	uint32_t offset = 0;
+	uint8_t chinese_char[32] = {0};
+
+	if((pxchar1 & 0x80) && (pxchar2 & 0x80))
+	{
+		char_H = pxchar1 - 0xA0;
+		char_L = pxchar2 - 0xA0;
+		offset = ((char_H - 1) * 94 + (char_L - 1)) * 32;
+
+		const char *file_hello = MOUNT_POINT"/HZK16.txt";
+		FILE * ftp = fopen(file_hello, "rb");
+		fseek(ftp, offset, SEEK_SET);
+		fread(chinese_char, 1, 32, ftp);
+
+		Show_Dis_Chinese_bc(x, y, chinese_char, color, back);
+
+		fclose(ftp);
+	}
+	else
+	{
+		return;
+	}
 }
