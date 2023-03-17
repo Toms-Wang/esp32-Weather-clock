@@ -4,11 +4,15 @@
 #include "ff.h"
 
 #define MOUNT_POINT "/sdcard"
+#define SPI_MAX_NUM (1024 * 10)
 
 uint8_t PARALLEL_LINES = 16;
 spi_device_handle_t spi;
 uint16_t BACK_COLOR = WHITE;//默认背景色；
 uint8_t color_t[LCD_W * 2] = {0};
+
+uint8_t bmp52[30000];//天气图标缓冲区；
+uint8_t bmp53[40000];
 
 void lcd_spi_pre_transfer_callback(spi_transaction_t *t)
 {
@@ -27,12 +31,12 @@ void spi_LCD_init(void)
 		.sclk_io_num=PIN_NUM_CLK,
 		.quadwp_io_num=-1,
 		.quadhd_io_num=-1,
-		.max_transfer_sz=PARALLEL_LINES*240*2+8
+		.max_transfer_sz = SPI_MAX_NUM + 8
 	};
 
 	spi_device_interface_config_t devcfg =
 	{
-		.clock_speed_hz=16*1000*1000,
+		.clock_speed_hz=26*1000*1000,
 		.mode=0,                                //SPI mode 0
 		.spics_io_num=PIN_NUM_CS,               //CS pin
 		.queue_size=7,                          //We want to be able to queue 7 transactions at a time
@@ -107,7 +111,7 @@ void lcd_color(const uint16_t color)
     assert(ret==ESP_OK);            //Should have had no issues.
 }
 
-void lcd_long_data(uint8_t *pdata, uint16_t len)
+void lcd_long_data(const uint8_t *pdata, int len)
 {
     esp_err_t ret;
     spi_transaction_t t;
@@ -446,6 +450,32 @@ void LCD_ShowChinese(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, u
 	}
 }
 
+void LCD_ShowChinese_C(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color)
+{
+	uint8_t  char_L = 0, char_H = 0;
+	uint32_t offset = 0;
+	uint8_t chinese_char[32] = {0};
+
+	if((pxchar1 & 0x80) && (pxchar2 & 0x80))
+	{
+		char_H = pxchar1 - 0xA0;
+		char_L = pxchar2 - 0xA0;
+		offset = ((char_H - 1) * 94 + (char_L - 1)) * 32;
+
+		const char *file_hello = MOUNT_POINT"/HZK16.txt";
+		FILE * ftp = fopen(file_hello, "rb");
+		fseek(ftp, offset, SEEK_SET);
+		fread(chinese_char, 1, 32, ftp);
+
+		Show_Dis_Chinese(x, y, chinese_char, color);
+
+		fclose(ftp);
+	}
+	else
+	{
+		return;
+	}
+}
 //中英文混合显示；
 void Display_CE(uint16_t xes, uint16_t yes, char * Str, uint16_t color)
 {
@@ -526,39 +556,208 @@ void Display_CE(uint16_t xes, uint16_t yes, char * Str, uint16_t color)
 //显示背景图片；
 void LCD_Display(uint8_t xes, uint8_t yes, const uint8_t *pic)
 {
+	int len = 0;
 	uint8_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
 	uint8_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
 	LCD_setAddress(xes, yes, xes + width - 1, yes + height - 1);
+
+	len = width * height * 2;
+
+	if(len <= SPI_MAX_NUM)
+	{
+		lcd_long_data(pic + 8, width * height);
+	}
+	else if(len > SPI_MAX_NUM)
+	{
+		int num = len /(1024 * 10);
+		int tum = len %(1024 * 10);
+		for(int j = 0; j < num; j++)
+		{
+			lcd_long_data(pic + 8 + j * SPI_MAX_NUM, SPI_MAX_NUM);
+		}
+		lcd_long_data(pic + 8 + num * SPI_MAX_NUM, tum);
+	}
+
+//	for(int i = 0; i < height; i++)
+//	{
+//		for(int j = 0; j < width; j++)
+//		{
+//			lcd_color(((uint16_t)(pic[8 + (i * width + j) * 2]) << 8) | pic[8 + (i * width + j) * 2 + 1]);
+//		}
+//	}
+}
+
+
+//显示天气局部图；
+void LCD_Display_Icon(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t *back)
+{
+	//uint16_t color = 0;
+	int len = 0;
+	uint8_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
+	uint8_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
+	LCD_setAddress(xes, yes, xes + width - 1, yes + height - 1);
+	len = width * height * 2;
+
 	for(int i = 0; i < height; i++)
 	{
 		for(int j = 0; j < width; j++)
 		{
-			lcd_color(((uint16_t)(pic[8 + (i * width + j) * 2]) << 8) | pic[8 + (i * width + j) * 2 + 1]);
+//			color = ((uint16_t)(pic[8 + (i * width + j) * 2]) << 8) | pic[8 + (i * width + j) * 2 + 1];
+
+			if(pic[8 + (i * width + j) * 2] == 0xFF && pic[8 + (i * width + j) * 2 + 1] == 0xFF)
+			{
+				pic[8 + (i * width + j) * 2] = back[8 + ((i + yes) * 128 + j + xes) * 2];
+				pic[8 + (i * width + j) * 2 + 1] = back[8 + ((i + yes) * 128 + j + xes) * 2 + 1];
+			}
+
+//			if(color == 0xFFFF)
+//			{
+//				color = ((uint16_t)(back[8 + ((i + yes) * 128 + j + xes) * 2]) << 8) | back[8 + ((i + yes) * 128 + j + xes) * 2 + 1];
+//			}
+//			lcd_color(color);
 		}
+	}
+
+	if(len <= SPI_MAX_NUM)
+	{
+		lcd_long_data(pic + 8, width * height);
+	}
+	else if(len > SPI_MAX_NUM)
+	{
+		int num = len /(1024 * 10);
+		int tum = len %(1024 * 10);
+		for(int j = 0; j < num; j++)
+		{
+			lcd_long_data(pic + 8 + j * SPI_MAX_NUM, SPI_MAX_NUM);
+		}
+		lcd_long_data(pic + 8 + num * SPI_MAX_NUM, tum);
+	}
+
+
+
+//	for(int i = 0; i < height; i++)
+//	{
+//		for(int j = 0; j < width; j++)
+//		{
+//			color = ((uint16_t)(pic[8 + (i * width + j) * 2]) << 8) | pic[8 + (i * width + j) * 2 + 1];
+//			if(color == 0xFFFF)
+//			{
+//				color = ((uint16_t)(back[8 + ((i + yes) * 128 + j + xes) * 2]) << 8) | back[8 + ((i + yes) * 128 + j + xes) * 2 + 1];
+//			}
+////			else
+////			{
+////				color = YELLOW;
+////			}
+//
+//			lcd_color(color);
+//		}
+//	}
+}
+
+//显示天气局部图；
+void LCD_Display_Icon_cen(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t *back)
+{
+	int W_f = 0;
+	int H_f = 0;
+
+	int len = 0;
+	uint8_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
+	uint8_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
+	LCD_setAddress(xes, yes, xes + 120 - 1, yes + 120 - 1);
+	len = width * height * 2;
+
+	W_f = (120 - width) / 2;
+	H_f = (120 - height) / 2;
+
+	for(int i = 0; i < height; i++)//将白色替换为背景色；
+	{
+		for(int j = 0; j < width; j++)
+		{
+			if(pic[8 + (i * width + j) * 2] == 0xFF && pic[8 + (i * width + j) * 2 + 1] == 0xFF)
+			{
+				pic[8 + (i * width + j) * 2] = back[8 + ((i + yes + H_f) * 128 + j + xes + W_f) * 2];
+				pic[8 + (i * width + j) * 2 + 1] = back[8 + ((i + yes+ H_f) * 128 + j + xes+ W_f) * 2 + 1];
+			}
+
+		}
+	}
+
+	for(int i = 0; i < 120; i++)//图片居中处理；
+	{
+		for(int j = 0; j < 120; j++)
+		{
+			if(i >= H_f && i < (H_f + height) && j >= W_f && j < (W_f + width))
+			{
+				bmp53[(i * 120 + j) * 2]     = pic[8 + ((i-H_f) * width + (j - W_f)) * 2];
+				bmp53[(i * 120 + j) * 2 + 1] = pic[8 + ((i-H_f) * width + (j - W_f)) * 2 + 1];
+			}
+			else
+			{
+				bmp53[(i * 120 + j) * 2] = back[8 + ((i + yes) * 128 + j + xes) * 2];
+				bmp53[(i * 120 + j) * 2 + 1] = back[8 + ((i + yes) * 128 + j + xes) * 2 + 1];
+			}
+		}
+	}
+
+	len = 120 * 120 *2;
+
+	if(len <= SPI_MAX_NUM)//发送到屏幕；
+	{
+		lcd_long_data(bmp53, len);
+	}
+	else if(len > SPI_MAX_NUM)
+	{
+		int num = len /(1024 * 10);
+		int tum = len %(1024 * 10);
+		for(int j = 0; j < num; j++)
+		{
+			lcd_long_data(bmp53 + j * SPI_MAX_NUM, SPI_MAX_NUM);
+		}
+		lcd_long_data(bmp53 + num * SPI_MAX_NUM, tum);
 	}
 }
-//显示天气局部图；
-void LCD_Display_Icon(uint8_t xes, uint8_t yes, const uint8_t *pic, const uint8_t *back)
-{
-	uint16_t color = 0;
-	uint8_t width 	= ((uint16_t)pic[2]) << 8 | pic[3];
-	uint8_t height 	= ((uint16_t)pic[4]) << 8 | pic[5];
-	LCD_setAddress(xes, yes, xes + width - 1, yes + height - 1);
-	for(int i = 0; i < height; i++)
-	{
-		for(int j = 0; j < width; j++)
-		{
-			color = ((uint16_t)(pic[8 + (i * width + j) * 2]) << 8) | pic[8 + (i * width + j) * 2 + 1];
-			if(color == 0xFFFF)
-			{
-				color = ((uint16_t)(back[8 + ((i + yes) * 128 + j + xes) * 2]) << 8) | back[8 + ((i + yes) * 128 + j + xes) * 2 + 1];
-			}
-//			else
-//			{
-//				color = YELLOW;
-//			}
 
-			lcd_color(color);
-		}
+void LCD_Display_52(uint8_t xes, uint8_t yes, const uint8_t *back)
+{
+	FILE * fp = NULL;
+	uint32_t Hex_Full_Len = 0;
+	const char *file_name = MOUNT_POINT"/bmp5_2.txt";
+
+	fp = fopen(file_name, "rb");
+	if(fp != NULL)
+	{
+		printf("fp ！= NULL");
 	}
+	fseek(fp, 0, SEEK_END);
+
+	Hex_Full_Len = ftell(fp);//求字节长度；全文字节数；
+	fseek(fp, 0, SEEK_SET);
+	fread(bmp52, 1, Hex_Full_Len, fp);
+	LCD_Display_Icon(xes, yes, bmp52, back);
+	fclose(fp);
+}
+
+void LCD_Display_bmp(uint8_t xes, uint8_t yes, char * pname, const uint8_t *back)
+{
+	FILE * fp = NULL;
+	uint32_t num_Len = 0;
+	char fname[50] = {0};
+	strcpy(fname, MOUNT_POINT);
+	strcpy(fname + strlen((char *)MOUNT_POINT), pname);
+	//const char *file_name = MOUNT_POINT"/bmp3.txt";
+
+	fp = fopen(fname, "rb");
+	if(fp == NULL)
+	{
+		printf("fp == NULL");
+	}
+	fseek(fp, 0, SEEK_END);
+
+	num_Len = ftell(fp);//求字节长度；全文字节数；
+	fseek(fp, 0, SEEK_SET);
+	fread(bmp52, 1, num_Len, fp);
+	//LCD_Display_Icon(xes, yes, bmp52, back);
+	LCD_Display_Icon_cen(xes, yes, bmp52, back);
+
+	fclose(fp);
 }

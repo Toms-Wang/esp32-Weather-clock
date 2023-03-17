@@ -67,8 +67,15 @@ void Show_Dis_Chinese(uint16_t x, uint16_t y, uint8_t *ptm, uint16_t color);
 void LCD_ShowChinese(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color, FILE * fp);
 
 void LCD_Display(uint8_t xes, uint8_t yes, const uint8_t *pic);
-void LCD_Display_Icon(uint8_t xes, uint8_t yes, const uint8_t *pic, const uint8_t *back);
+void LCD_Display_Icon(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t *back);
 
 void Display_CE(uint16_t xes, uint16_t yes, char * Str, uint16_t color);
+
+void LCD_ShowChinese_C(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color);
+
+void LCD_Display_52(uint8_t xes, uint8_t yes, const uint8_t *back);
+
+//void LCD_Display_bmp1(uint8_t xes, uint8_t yes, const uint8_t *back);
+void LCD_Display_bmp(uint8_t xes, uint8_t yes, char * pname, const uint8_t *back);
 
 #endif
