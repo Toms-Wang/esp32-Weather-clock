@@ -52,12 +52,11 @@
 #include "sd_spi.h"
 
 #define TAG "ESP"
+#define tem_num 37
 
 extern QueueHandle_t wifi_quent;
 
 static const char *TAG1 = "example1";
-
-#define tem_num 37
 
 char tem_bmp[tem_num][25] = {"晴", "晴夜", "多云", "晴间多云", "晴间多云夜", "大部多云",
 						"大部多云夜", "阴", "阵雨", "雷阵雨", "雷阵雨伴有冰雹", "小雨",
@@ -65,17 +64,14 @@ char tem_bmp[tem_num][25] = {"晴", "晴夜", "多云", "晴间多云", "晴间�
 						"雨夹雪", "阵雪", "小雪", "中雪", "大雪", "暴雪",
 						"浮尘", "扬沙", "沙尘暴", "强沙尘暴", "雾", "霾",
 						"风", "大风", "飓风", "热带风暴", "龙卷风", "冷","热"
-
-
-
 };
 
-char tem_name[tem_num][15] = {"/bmp1.txt",  "/bmp2.txt",  "/bmp3.txt",  "/bmp4.txt",  "/bmp5.txt",  "/bmp6.txt",
-						 "/bmp7.txt",  "/bmp8.txt",  "/bmp9.txt",  "/bmp10.txt", "/bmp11.txt", "/bmp12.txt",
-						 "/bmp13.txt", "/bmp14.txt", "/bmp15.txt", "/bmp16.txt", "/bmp17.txt", "/bmp18.txt",
-						 "/bmp19.txt", "/bmp20.txt", "/bmp21.txt", "/bmp22.txt", "/bmp23.txt", "/bmp24.txt",
-						 "/bmp25.txt", "/bmp26.txt", "/bmp27.txt", "/bmp28.txt", "/bmp29.txt", "/bmp30.txt",
-						 "/bmp31.txt", "/bmp32.txt", "/bmp33.txt", "/bmp34.txt", "/bmp35.txt", "/bmp36.txt", "/bmp37.txt"
+char tem_name[tem_num][15] = {	 "/bmp1.txt",  "/bmp2.txt",  "/bmp3.txt",  "/bmp4.txt",  "/bmp5.txt",  "/bmp6.txt",
+								 "/bmp7.txt",  "/bmp8.txt",  "/bmp9.txt",  "/bmp10.txt", "/bmp11.txt", "/bmp12.txt",
+								 "/bmp13.txt", "/bmp14.txt", "/bmp15.txt", "/bmp16.txt", "/bmp17.txt", "/bmp18.txt",
+								 "/bmp19.txt", "/bmp20.txt", "/bmp21.txt", "/bmp22.txt", "/bmp23.txt", "/bmp24.txt",
+								 "/bmp25.txt", "/bmp26.txt", "/bmp27.txt", "/bmp28.txt", "/bmp29.txt", "/bmp30.txt",
+								 "/bmp31.txt", "/bmp32.txt", "/bmp33.txt", "/bmp34.txt", "/bmp35.txt", "/bmp36.txt", "/bmp37.txt"
 };
 
 void lcd_flash_task(void * parm)
@@ -116,13 +112,9 @@ void lcd_flash_task(void * parm)
 						}
 					}
 
-//					Display_CE(44, 52, (char *)cit, WHITE);
-					Display_CE_bc(44, 52, (char *)cit, WHITE, gImage_bmp320);
-
 					if((strlen((char *)wea) /3 ) > 5)
 					{
-//						Display_CE(p_x - strlen((char*)wea) / 3 * 16 / 2, p_y + 8, (char *)wea, WHITE);
-//						Display_CE(p_x - strlen((char*)wea) / 3 * 16 / 2, 120, (char *)wea, WHITE);
+
 						Display_CE_bc(p_x - strlen((char*)wea) / 3 * 16 / 2, 120, (char *)wea, WHITE, gImage_bmp320);
 
 						if(strlen((char *)tem) == 1)
@@ -135,18 +127,12 @@ void lcd_flash_task(void * parm)
 							strcpy((char *)tem1, (char *)tem);
 						}
 
-//						Display_CE(p_x - 2 * 8, 144, (char *)tem1, WHITE);
-//						LCD_ShowChinese_C(p_x, 144 , 0xA1, 0xE6, WHITE);
 						Display_CE_bc(p_x - 2 * 8, 144, (char *)tem1, WHITE, gImage_bmp320);
 						LCD_ShowChinese_C_bc(p_x, 144 , 0xA1, 0xE6, WHITE, gImage_bmp320);
-//						Display_CE(p_x - 2 * 8, p_y + 8 + 16, (char *)tem1, WHITE);
-//						LCD_ShowChinese_C(p_x, p_y + 8 + 16 , 0xA1, 0xE6, WHITE);
+
 					}
 					else
 					{
-//						Display_CE(p_x - (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2, p_y + 8, (char *)wea, WHITE);
-//						Display_CE(p_x - (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2, 120, (char *)wea, WHITE);
-
 						Display_CE_bc(p_x - (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2, 120, (char *)wea, WHITE, gImage_bmp320);
 
 						if(strlen((char *)tem) == 1)
@@ -158,12 +144,6 @@ void lcd_flash_task(void * parm)
 						{
 							strcpy((char *)tem1, (char *)tem);
 						}
-
-//						Display_CE(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 4 * 8 , p_y + 8, (char *)tem1, WHITE);
-//						LCD_ShowChinese_C(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 2 * 8, p_y + 8, 0xA1, 0xE6, WHITE);
-
-//						Display_CE(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 4 * 8 , 120, (char *)tem1, WHITE);
-//						LCD_ShowChinese_C(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 2 * 8, 120, 0xA1, 0xE6, WHITE);
 
 						Display_CE_bc(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 4 * 8 , 120, (char *)tem1, WHITE, gImage_bmp320);
 						LCD_ShowChinese_C_bc(p_x + (strlen((char*)wea) / 3 * 16 + 5 * 8) / 2 - 2 * 8, 120, 0xA1, 0xE6, WHITE, gImage_bmp320);
@@ -195,10 +175,10 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    //LCD_Config();
     LCD_Config_ST7789();
 
     spi_SD_init();
+    vTaskDelay(120 / portTICK_PERIOD_MS);
 
     //LCD_Fill(WHITE);
     LCD_Display(0, 	0, gImage_bmp320);
@@ -207,6 +187,14 @@ void app_main(void)
     char filename[50] = {0};
     uint16_t z_x = 0;
     uint16_t z_y = 0;
+
+    LCD_showChar48_bc(30, 16, '1', WHITE, gImage_bmp320);
+    LCD_showChar48_bc(54, 16, '5', WHITE, gImage_bmp320);
+    LCD_showChar48_bc(30, 64, '4', WHITE, gImage_bmp320);
+    LCD_showChar48_bc(54, 64, '6', WHITE, gImage_bmp320);
+
+    //Display_CE_bc(44 , 136, (char *)"周二", WHITE, gImage_bmp320);
+    Display_CE_bc(8 , 120, (char *)"03月20日 周一", WHITE, gImage_bmp320);
 
 	for(int i = 0; i < 37; i++)
 	{
@@ -232,6 +220,5 @@ void app_main(void)
     while(1)
     {
     	vTaskDelay(100 / portTICK_PERIOD_MS);
-
     }
 }

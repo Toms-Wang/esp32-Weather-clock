@@ -2,6 +2,7 @@
 #include "font.h"
 #include "hzk.h"
 #include "ff.h"
+#include "gbk.h"
 
 #define MOUNT_POINT "/sdcard"
 #define SPI_MAX_NUM (1024 * 10)
@@ -36,7 +37,7 @@ void spi_LCD_init(void)
 
 	spi_device_interface_config_t devcfg =
 	{
-		.clock_speed_hz=26*1000*1000,
+		.clock_speed_hz=40*1000*1000,
 		.mode=2,                                //SPI mode 0
 		.spics_io_num=PIN_NUM_CS,               //CS pin
 		.queue_size=7,                          //We want to be able to queue 7 transactions at a time
@@ -976,9 +977,87 @@ void Show_Dis_Chinese_bc(uint16_t x, uint16_t y, uint8_t *ptm, uint16_t color, c
 	}
 }
 
+static INLINE__ void* gbk_malloc(uint32_t size)
+{
+    void *p = malloc(size);
+
+    if (p != NULL)
+    {
+        return p;
+    }
+
+    printf("[%s]xmalloc fail!!\n", __FUNCTION__);
+//    exit(EXIT_FAILURE);
+    exit(-1);
+
+}
+
+int utf8_gbk(char **ptr, void *pin_buf, s32 in_len)
+{
+	if ((ptr == NULL) || (pin_buf == NULL) || (in_len < 0))
+	{
+		return -1;
+	}
+
+	*ptr = NULL;
+
+	u8 *ps = (u8 *)gbk_malloc((in_len*2)/3 + 4);
+	u8 *pout = ps;
+	u8 *pin = (u8 *)pin_buf;
+	u8 *pend = pin + in_len;
+
+	while (pin < pend)
+	{
+		u8 h = *pin++;
+
+		if (!(h & 0x80))
+		{
+			*pout++ = h;
+			continue;
+		}
+
+		if ((pin + 2) > pend)
+		{
+			free(ps);
+			return -1;
+		}
+
+		u8 mid = pin[0];
+		u8 end = pin[1];
+
+		if (h < 0xe4 || h > 0xe9 || mid < 0x80 || end < 0x80 || mid > 0xbf || end > 0xbf
+				|| (h == 0xe9 && mid > 0xbe) || (h == 0xe9 && mid == 0xbe && end > 0xa5)
+				|| (h == 0xe4 && mid < 0xb8) || (h == 0xe9 && mid == 0xb8 && end < 0x80))
+		{
+			free(ps);
+			return -1;
+		}
+
+		int offset = (h - 0xe4) * 64 * 64 + (mid - 0xb8) * 64 + end - 0x80;
+
+		//u16 uniode = ((u16)h << 12) | ((u16)(mid & 0x3f) << 6) | (end & 0x3f);
+		//u16 gbk = uni2gbk2(uniode);
+
+//		if (gbk == 0)
+//		{
+//			free(ps);
+//			return -1;
+//		}
+
+		pin += 2;
+		*pout++ = gbk[offset][0];
+		*pout++ = gbk[offset][1];
+	}
+
+	*ptr = (char*)ps;
+	*pout = 0;
+
+	return pout - ps;
+}
+
 void Display_CE_bc(uint16_t xes, uint16_t yes, char * Str, uint16_t color, const uint8_t * back)
 {
-	char *ch_str;
+	char *ch_str = NULL;
 	uint8_t adat[32] = {0};
 
 	uint8_t wk_ucTem = 0;
@@ -989,20 +1068,44 @@ void Display_CE_bc(uint16_t xes, uint16_t yes, char * Str, uint16_t color, const
 	uint8_t FTP_ucStr = 0;
 
 	uint8_t i = 0;
-	uint8_t len = 0;
+	uint16_t len = 0;
+	uint16_t len0 = 0;
 
 	uint16_t ex = xes;
 	uint16_t ey = yes;
 	uint16_t x0 = xes;
 
-	if(strlen(Str) > (100 - 1))
+	int j = 0;
+	while(Str[j] != 0)
+	{
+		if (Str[j] <= 0x7F) //then ASCII 占用1个字节
+		{
+			len0 += 1;
+			j += 1;
+		}
+		else if (Str[j] >= 0xC0 && Str[j] <= 0xDF) // then 首字节   UTF-8 占用2个字节
+		{
+			len0 += 2;
+			j += 2;
+		}
+		else if (Str[j] >= 0xE0 && Str[j] <= 0xEF) // then 首字节   UTF-8 占用3个字节
+		{
+			len0 += 3;
+			j += 3;
+		}
+	}
+	printf("len0 = %d\n", len0);
+	if(len0 > (100 - 1))
 	{
 		printf("string size too long");
 	}
 
-	utf82gbk(&ch_str, Str, strlen(Str));
+	//utf82gbk(&ch_str, Str, len0);
 
+	utf8_gbk(&ch_str, Str, len0);
 	len = strlen(ch_str);
+
+	printf("len = %d\n", len);
 
 	for(i = 0; i < len; i++)
 	{
@@ -1050,7 +1153,9 @@ void Display_CE_bc(uint16_t xes, uint16_t yes, char * Str, uint16_t color, const
 	{
 		fclose(ftp);
 	}
+	free(ch_str);
 }
+
 
 void LCD_ShowChinese_C_bc(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color, const uint8_t * back)
 {
@@ -1076,5 +1181,40 @@ void LCD_ShowChinese_C_bc(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxcha
 	else
 	{
 		return;
+	}
+}
+
+//显示中英文字体，字体改变背景不变；
+void LCD_showChar48_bc(uint16_t x, uint16_t y, uint8_t chr, uint16_t color, const uint8_t * back)
+{
+	uint16_t i, j, k;
+	uint8_t temp;
+	chr = chr - '0';
+	if(chr > 9)
+	{
+		return;
+	}
+
+	LCD_setAddress(x, y, x+24-1, y+48-1);
+	for(i=0; i<48; i++)
+	{
+		for(k = 0; k < 3; k++)
+		{
+			temp = asc2_4824[chr][i * 3 + k];
+			for(j = 0; j < 8; j++)
+			{
+				if(temp & 0x80)
+				{
+					LCD_drawPoint(x+j + k * 8, y+i, color);
+				}
+				else
+				{
+					LCD_drawPoint(x+j + k * 8, y+i, (uint16_t)(back[8 + ((i + y) * LCD_W + j + x + k * 8) * 2]) << 8 | (back[8 + ((i + y) * LCD_W + j + x + k * 8) * 2 + 1]));
+					//LCD_drawPoint(x+j, y+i, BACK_COLOR);
+				}
+				temp <<= 1;
+			}
+		}
+
 	}
 }

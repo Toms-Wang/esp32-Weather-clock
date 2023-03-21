@@ -44,15 +44,24 @@
 
 #define LCD_HOST    HSPI_HOST
 
-#define PIN_NUM_MISO 25
-#define PIN_NUM_MOSI 23
-#define PIN_NUM_CLK  19
+//#define PIN_NUM_MISO 25
+//#define PIN_NUM_MOSI 23
+//#define PIN_NUM_CLK  19
+//
+//#define PIN_NUM_CS   22
+//
+//#define PIN_NUM_DC   21
+//#define PIN_NUM_RST  18
+//#define PIN_NUM_BCKL 15
 
-#define PIN_NUM_CS   22
+#define PIN_NUM_CS   15
+#define PIN_NUM_CLK  14
+#define PIN_NUM_MISO 12
+#define PIN_NUM_MOSI 13
 
-#define PIN_NUM_DC   21
-#define PIN_NUM_RST  18
-#define PIN_NUM_BCKL 15
+#define PIN_NUM_DC   25
+#define PIN_NUM_RST  26
+#define PIN_NUM_BCKL 27
 
 
 void LCD_clear(uint16_t color);
@@ -85,5 +94,7 @@ void LCD_Display_bmp(uint8_t xes, uint8_t yes, char * pname, const uint8_t *back
 void Display_CE_bc(uint16_t xes, uint16_t yes, char * Str, uint16_t color, const uint8_t * back);
 void Show_Dis_Chinese_bc(uint16_t x, uint16_t y, uint8_t *ptm, uint16_t color, const uint8_t * back);
 void LCD_ShowChinese_C_bc(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxchar2, uint16_t color, const uint8_t * back);
+
+void LCD_showChar48_bc(uint16_t x, uint16_t y, uint8_t chr, uint16_t color, const uint8_t * back);
 
 #endif

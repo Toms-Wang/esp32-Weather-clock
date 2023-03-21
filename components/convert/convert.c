@@ -3088,7 +3088,7 @@ int utf82gbk(char **ptr, void *pin_buf, s32 in_len)
 		u8 mid = pin[0];
 		u8 end = pin[1];
 
-		if (((h & 0xF0) != 0xE0) || ((mid & 0xC0) != 0x80) || ((end & 0xC0) != 0x80))
+		if (((h & 0xF0) != 0xE0) || /*((mid & 0xC0) != 0x80) ||*/ ((end & 0xC0) != 0x80))
 		{
 			free(ps);
 			return -1;
