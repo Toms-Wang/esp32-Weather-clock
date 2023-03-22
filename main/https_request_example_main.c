@@ -50,8 +50,6 @@
 #include "blu_fi.h"
 #include "gui.h"
 
-
-
 uint8_t wea_status = 0;
 QueueHandle_t wifi_quent;
 

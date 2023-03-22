@@ -1115,16 +1115,16 @@ void Display_CE_bc(uint16_t xes, uint16_t yes, char * Str, uint16_t color, const
 
 	for(i = 0; i < len; i++)
 	{
-		if((ex + 16) >= 240)
-		{
-			ex = x0;
-			ey += 16;
-		}
-
-		if((ey + 16) >= 320)
-		{
-			return;
-		}
+//		if((ex + 8) >= 240)
+//		{
+//			ex = x0;
+//			ey += 16;
+//		}
+//
+//		if((ey + 8) >= 320)
+//		{
+//			return;
+//		}
 
 		if(ch_str[i] & 0x80)//判断是否有中文；
 		{

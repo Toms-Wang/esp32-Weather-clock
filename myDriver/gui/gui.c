@@ -1,6 +1,8 @@
 #include "gui.h"
 
 #define tem_num 37
+uint8_t len = 0;
+
 static const char *TAG1 = "example1";
 
 static char week_num[7][8]= {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
@@ -13,7 +15,7 @@ static char tem_bmp[tem_num][25] = {"晴", "晴夜", "多云", "晴间多云", "
 						"风", "大风", "飓风", "热带风暴", "龙卷风", "冷","热"
 };
 
-static char tem_name[tem_num][15] = {	 "/bmp1.txt",  "/bmp2.txt",  "/bmp3.txt",  "/bmp4.txt",  "/bmp5.txt",  "/bmp6.txt",
+static char tem_name[tem_num][15] = {"/bmp1.txt",  "/bmp2.txt",  "/bmp3.txt",  "/bmp4.txt",  "/bmp5.txt",  "/bmp6.txt",
 								 "/bmp7.txt",  "/bmp8.txt",  "/bmp9.txt",  "/bmp10.txt", "/bmp11.txt", "/bmp12.txt",
 								 "/bmp13.txt", "/bmp14.txt", "/bmp15.txt", "/bmp16.txt", "/bmp17.txt", "/bmp18.txt",
 								 "/bmp19.txt", "/bmp20.txt", "/bmp21.txt", "/bmp22.txt", "/bmp23.txt", "/bmp24.txt",
@@ -32,7 +34,6 @@ void gui_update_weather(uint8_t xes, uint8_t yes, const uint8_t *back)//更新�
 	uint8_t cit[20]  = {0};
 	uint8_t wea[20]  = {0};
 	uint8_t tem[20]  = {0};
-	uint8_t tem1[20] = {0};
 	uint16_t p_x = 0;
 	uint16_t p_y = 0;
 
@@ -47,11 +48,27 @@ void gui_update_weather(uint8_t xes, uint8_t yes, const uint8_t *back)//更新�
 		{
 			if(strcmp((char *)tem_bmp[i], (char *)wea) == 0)
 			{
+				if(i == 0 || i == 3 || i == 5)//有夜晚图标的，切换夜晚图标；
+				{
+					struct tm* tm3 = get_tm_time();
+					if(tm3->tm_hour < 6 || tm3->tm_hour > 18)
+					{
+						i++;
+					}
+				}
 				ESP_LOGI(TAG1, "weather = %s\n", (char *)tem_bmp[i]);
 				LCD_Display_bmp(xes, yes, (char *)tem_name[i], back, &p_x, &p_y);//更新天气图案；
-
+				break;
 			}
 		}
+
+		if(len > ((strlen((char *)wea) * 2 / 3) + strlen((char *)tem)))
+		{
+			Display_CE_bc(p_x - 60, p_y, (char *)"               ", WHITE, back);
+			Display_CE_bc(p_x - 60, p_y + 16 + 8, (char *)"               ", WHITE, back);
+		}
+
+		len = ((strlen((char *)wea) * 2 / 3) + strlen((char *)tem));
 
 		if((strlen((char *)wea) /3 ) > 5)//考虑天气情况长度过长，对其换行；
 		{
