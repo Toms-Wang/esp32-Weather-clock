@@ -50,8 +50,7 @@
 #include "blu_fi.h"
 #include "gui.h"
 
-#define TAG "ESP"
-#define tem_num 37
+
 
 uint8_t wea_status = 0;
 QueueHandle_t wifi_quent;
@@ -118,7 +117,7 @@ void app_main(void)
 
 	if(strlen((char *)myconfig.sta.ssid) > 0)
 	{
-		ESP_LOGI(TAG, "already set, SSID is: %s, start connect", myconfig.sta.ssid);
+		ESP_LOGI(TAG1, "already set, SSID is: %s, start connect", myconfig.sta.ssid);
 		esp_wifi_connect();
 	}
 	else
