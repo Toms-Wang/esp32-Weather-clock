@@ -274,8 +274,6 @@ void LCD_Config_ST7789(void)
 	lcd_cmd(0x29);
 
 	lcd_cmd(0x2C);
-
-
 }
 
 void LCD_Config(void)
@@ -749,9 +747,7 @@ void LCD_Display_Icon(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t *bac
 		{
 			lcd_long_data(pic + 8 + num * SPI_MAX_NUM, tum);
 		}
-
 	}
-
 
 
 //	for(int i = 0; i < height; i++)
@@ -1078,7 +1074,7 @@ void Display_CE_bc(uint16_t xes, uint16_t yes, char * Str, uint16_t color, const
 
 	uint16_t ex = xes;
 	uint16_t ey = yes;
-	uint16_t x0 = xes;
+	//uint16_t x0 = xes;
 
 	int j = 0;
 	while(Str[j] != 0)

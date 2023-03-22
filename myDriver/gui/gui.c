@@ -23,7 +23,6 @@ static char tem_name[tem_num][15] = {"/bmp1.txt",  "/bmp2.txt",  "/bmp3.txt",  "
 								 "/bmp31.txt", "/bmp32.txt", "/bmp33.txt", "/bmp34.txt", "/bmp35.txt", "/bmp36.txt", "/bmp37.txt"
 };
 
-
 void gui_update_back(const uint8_t *back)
 {
 	LCD_Display(0, 0, back);
@@ -115,6 +114,13 @@ void gui_update_time(uint8_t xes, uint8_t yes, const uint8_t *back)//显示时�
 	uint8_t mon = 0;
 
 	tm3 = get_tm_time();
+
+	if(tm3->tm_hour == 0 && tm3->tm_min == 0)//00:00联网更新一次（也可能是三次）时间；
+	{
+		http_update_time();
+		tm3 = get_tm_time();
+	}
+
 	ESP_LOGI(TAG1, "display time = %s", asctime(tm3));
 
 	sprintf(time0.hour, "%02d", tm3->tm_hour);

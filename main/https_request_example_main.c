@@ -76,7 +76,6 @@ void lcd_flash_task(void * parm)
 
 			while(1)
 			{
-
 				gui_update_weather(120, 0, gImage_bmp320);
 
 				for(int j = 0; j < 15; j++)
@@ -87,6 +86,7 @@ void lcd_flash_task(void * parm)
 					vTaskDelay(5000 / portTICK_PERIOD_MS);
 
 					gui_update_time(0, 0, gImage_bmp320);
+
 				}
 			}
 		}
