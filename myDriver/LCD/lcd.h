@@ -97,4 +97,7 @@ void LCD_ShowChinese_C_bc(uint16_t x, uint16_t y, uint8_t pxchar1, uint8_t pxcha
 
 void LCD_showChar48_bc(uint16_t x, uint16_t y, uint8_t chr, uint16_t color, const uint8_t * back);
 
+void LCD_showStr48_bc(uint16_t x, uint16_t y, char * Str, uint16_t color, const uint8_t * back);
+
+
 #endif

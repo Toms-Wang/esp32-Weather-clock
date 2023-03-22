@@ -1,7 +1,7 @@
 #include "smartconfig.h"
 
 
-QueueHandle_t wifi_quent;
+extern QueueHandle_t wifi_quent;
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t s_wifi_event_group;
 

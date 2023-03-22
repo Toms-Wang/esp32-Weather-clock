@@ -7,7 +7,8 @@ set(srcs
 ../myDriver/LED/LED.c
 ../myDriver/LCD/lcd.c
 ../myDriver/weather/weather.c
-../myDriver/time/time.c
+../myDriver/tim_data/tim_data.c
+../myDriver/gui/gui.c
  )
 
 set(inc 
@@ -15,7 +16,8 @@ set(inc
 ../myDriver/LED/
 ../myDriver/LCD/
 ../myDriver/weather/
-../myDriver/time/
+../myDriver/tim_data/
+../myDriver/gui/
  )
 
 idf_component_register(SRCS ${srcs}

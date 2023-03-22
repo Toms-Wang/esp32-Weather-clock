@@ -12,8 +12,8 @@ spi_device_handle_t spi;
 uint16_t BACK_COLOR = WHITE;//默认背景色；
 uint8_t color_t[LCD_W * 2] = {0};
 
-uint8_t bmp52[30000];//天气图标缓冲区；
-uint8_t bmp53[40000];
+uint8_t bmp52[28810];//天气图标缓冲区；
+uint8_t bmp53[28810];
 
 void lcd_spi_pre_transfer_callback(spi_transaction_t *t)
 {
@@ -184,8 +184,7 @@ void LCD_Config_ST7789(void)
 	gpio_set_level(PIN_NUM_RST, 1);
 	vTaskDelay(100 / portTICK_RATE_MS);
 
-	gpio_set_level(PIN_NUM_BCKL, 1);
-	vTaskDelay(100 / portTICK_RATE_MS);
+
 
 	lcd_cmd(0x11);
 	vTaskDelay(120 / portTICK_RATE_MS);
@@ -267,11 +266,16 @@ void LCD_Config_ST7789(void)
 	lcd_data(0x2B);
 	lcd_data(0x2D);
 
+	vTaskDelay(100 / portTICK_RATE_MS);
+	gpio_set_level(PIN_NUM_BCKL, 1);
+
 	lcd_cmd(0x21);
 
 	lcd_cmd(0x29);
 
 	lcd_cmd(0x2C);
+
+
 }
 
 void LCD_Config(void)
@@ -784,7 +788,8 @@ void LCD_Display_Icon_cen(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t 
 	W_f = (120 - width) / 2;
 	H_f = (120 - height) / 2;
 
-	*z_yes = yes + H_f + height;
+	//*z_yes = yes + H_f + height;
+	*z_yes = yes + 120;
 	*z_xes = xes + W_f + width / 2;
 
 	for(int i = 0; i < height; i++)//将白色替换为背景色；
@@ -1094,10 +1099,11 @@ void Display_CE_bc(uint16_t xes, uint16_t yes, char * Str, uint16_t color, const
 			j += 3;
 		}
 	}
-	printf("len0 = %d\n", len0);
+	//printf("len0 = %d\n", len0);
 	if(len0 > (100 - 1))
 	{
-		printf("string size too long");
+		printf("string size too long\n");
+		printf("len0 = %d\n", len0);
 	}
 
 	//utf82gbk(&ch_str, Str, len0);
@@ -1105,7 +1111,7 @@ void Display_CE_bc(uint16_t xes, uint16_t yes, char * Str, uint16_t color, const
 	utf8_gbk(&ch_str, Str, len0);
 	len = strlen(ch_str);
 
-	printf("len = %d\n", len);
+	//printf("len = %d\n", len);
 
 	for(i = 0; i < len; i++)
 	{
@@ -1216,5 +1222,25 @@ void LCD_showChar48_bc(uint16_t x, uint16_t y, uint8_t chr, uint16_t color, cons
 			}
 		}
 
+	}
+}
+
+void LCD_showStr48_bc(uint16_t x, uint16_t y, char * Str, uint16_t color, const uint8_t * back)
+{
+	while(*Str!='\0')
+	{
+		if(x>LCD_W-24)
+		{
+			x=0;
+			y+=48;
+		}
+		if(y>LCD_H-48)
+		{
+			y=x=0;
+			LCD_clear(BACK_COLOR);
+		}
+		LCD_showChar48_bc(x, y, *Str, color, back);
+		x+=24;
+		Str++;
 	}
 }
