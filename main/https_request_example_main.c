@@ -50,7 +50,7 @@
 #include "blu_fi.h"
 #include "gui.h"
 
-//uint8_t wea_status = 0;
+
 QueueHandle_t wifi_quent;
 
 TimerHandle_t timeHandle;
@@ -76,10 +76,9 @@ void lcd_flash_task(void * parm)
 
 	while(1)
 	{
-//		if(wea_status == 1)
-//		{
+
 		xQueueReceive(wifi_quent, &flash_state, 1000);
-//		}
+
 
 		if(flash_state == 6)
 		{
@@ -107,17 +106,7 @@ void lcd_flash_task(void * parm)
 			while(1)
 			{
 				vTaskDelay(5 / portTICK_PERIOD_MS);
-//				for(int j = 0; j < 15; j++)
-//				{
-//					vTaskDelay(5000 / portTICK_PERIOD_MS);
-//					vTaskDelay(5000 / portTICK_PERIOD_MS);
-//					vTaskDelay(5000 / portTICK_PERIOD_MS);
-//					vTaskDelay(5000 / portTICK_PERIOD_MS);
-//
-//					gui_update_time(0, 0, gImage_bmp320);
-//
-//				}
-//				gui_update_weather(120, 0, gImage_bmp320);
+
 			}
 		}
 	}
@@ -134,27 +123,14 @@ void app_main(void)
     Led_Config();
 
     gui_update_back(gImage_bmp320);
-//    LCD_Display(0, 	0, gImage_bmp320);
 
     LED_OFF();
 
     wifi_quent = xQueueCreate(5, sizeof(int));
 
-//    wifi_config_t myconfig = {0};
-//	esp_wifi_get_config(ESP_IF_WIFI_STA, &myconfig);//获取过配网信息。
-//	if(strlen((char *)myconfig.sta.ssid) > 0)
-//	{
-//		ESP_LOGI(TAG1, "already set, SSID is: %s, start connect", myconfig.sta.ssid);
-//		esp_wifi_connect();
-//	}
-//	else
-//	{
-		//wifi_blufi_config();
 	initialise_wifi();
-		//wea_status = 1;
-//	}
+
 	xTaskCreate(lcd_flash_task, "lcd_flash_task", 8192, NULL, 3, NULL);
-    //initialise_wifi();
 
     while(1)
     {
