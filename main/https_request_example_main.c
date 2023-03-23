@@ -50,10 +50,25 @@
 #include "blu_fi.h"
 #include "gui.h"
 
-uint8_t wea_status = 0;
+//uint8_t wea_status = 0;
 QueueHandle_t wifi_quent;
 
+TimerHandle_t timeHandle;
+TimerHandle_t weatherHandle;
+
 static const char *TAG1 = "example1";
+
+static void time_update(TimerHandle_t xTimer)
+{
+	(void)xTimer;
+	gui_update_time(0, 0, gImage_bmp320);
+}
+
+static void weather_update(TimerHandle_t xTimer)
+{
+	(void)xTimer;
+	gui_update_weather(120, 0, gImage_bmp320);
+}
 
 void lcd_flash_task(void * parm)
 {
@@ -61,33 +76,48 @@ void lcd_flash_task(void * parm)
 
 	while(1)
 	{
-		if(wea_status == 1)
+//		if(wea_status == 1)
+//		{
+		xQueueReceive(wifi_quent, &flash_state, 1000);
+//		}
+
+		if(flash_state == 6)
 		{
-			xQueueReceive(wifi_quent, &flash_state, 1000);
+			Display_CE_bc(48, 60, "wifi未连接, 请连接", WHITE, gImage_bmp320);
+			flash_state = 0;
 		}
 
-		if(flash_state == 5 || wea_status == 0)
+		if(flash_state == 5)
 		{
+			Display_CE_bc(48, 60, "                   ", WHITE, gImage_bmp320);
+
 			ESP_LOGI(TAG1, "receive queue, join in temperature update");
 
 			http_update_time();
 
 			gui_update_time(0, 0, gImage_bmp320);
+			gui_update_weather(120, 0, gImage_bmp320);
+
+			TimerHandle_t timeHandle = xTimerCreate("time_update", 5000, pdTRUE, NULL, time_update);
+			TimerHandle_t weatherHandle= xTimerCreate("weather_update", 5000 * 12 * 5, pdTRUE, NULL, weather_update);
+
+			xTimerStart(timeHandle, 0);
+			xTimerStart(weatherHandle, 0);
 
 			while(1)
 			{
-				gui_update_weather(120, 0, gImage_bmp320);
-
-				for(int j = 0; j < 15; j++)
-				{
-					vTaskDelay(5000 / portTICK_PERIOD_MS);
-					vTaskDelay(5000 / portTICK_PERIOD_MS);
-					vTaskDelay(5000 / portTICK_PERIOD_MS);
-					vTaskDelay(5000 / portTICK_PERIOD_MS);
-
-					gui_update_time(0, 0, gImage_bmp320);
-
-				}
+				vTaskDelay(5 / portTICK_PERIOD_MS);
+//				for(int j = 0; j < 15; j++)
+//				{
+//					vTaskDelay(5000 / portTICK_PERIOD_MS);
+//					vTaskDelay(5000 / portTICK_PERIOD_MS);
+//					vTaskDelay(5000 / portTICK_PERIOD_MS);
+//					vTaskDelay(5000 / portTICK_PERIOD_MS);
+//
+//					gui_update_time(0, 0, gImage_bmp320);
+//
+//				}
+//				gui_update_weather(120, 0, gImage_bmp320);
 			}
 		}
 	}
@@ -110,21 +140,20 @@ void app_main(void)
 
     wifi_quent = xQueueCreate(5, sizeof(int));
 
-    wifi_config_t myconfig = {0};
-	esp_wifi_get_config(ESP_IF_WIFI_STA, &myconfig);//获取过配网信息。
-
-	if(strlen((char *)myconfig.sta.ssid) > 0)
-	{
-		ESP_LOGI(TAG1, "already set, SSID is: %s, start connect", myconfig.sta.ssid);
-		esp_wifi_connect();
-	}
-	else
-	{
+//    wifi_config_t myconfig = {0};
+//	esp_wifi_get_config(ESP_IF_WIFI_STA, &myconfig);//获取过配网信息。
+//	if(strlen((char *)myconfig.sta.ssid) > 0)
+//	{
+//		ESP_LOGI(TAG1, "already set, SSID is: %s, start connect", myconfig.sta.ssid);
+//		esp_wifi_connect();
+//	}
+//	else
+//	{
 		//wifi_blufi_config();
-		initialise_wifi();
-		wea_status = 1;
-	}
-	xTaskCreate(lcd_flash_task, "lcd_flash_task", 4096, NULL, 3, NULL);
+	initialise_wifi();
+		//wea_status = 1;
+//	}
+	xTaskCreate(lcd_flash_task, "lcd_flash_task", 8192, NULL, 3, NULL);
     //initialise_wifi();
 
     while(1)

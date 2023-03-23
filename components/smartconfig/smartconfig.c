@@ -1,6 +1,5 @@
 #include "smartconfig.h"
 
-
 extern QueueHandle_t wifi_quent;
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t s_wifi_event_group;
@@ -103,6 +102,7 @@ void initialise_wifi(void)
 static void smartconfig_example_task(void * parm)
 {
 	int send = 5;
+	int send2 = 6;
 
     EventBits_t uxBits;
 
@@ -117,6 +117,9 @@ static void smartconfig_example_task(void * parm)
     else
     {
     	ESP_LOGI(TAG, "have no set, start to config");
+
+    	xQueueSend(wifi_quent, &send2, 10000);
+
     	ESP_ERROR_CHECK( esp_smartconfig_set_type(SC_TYPE_ESPTOUCH) );
 		smartconfig_start_config_t cfg = SMARTCONFIG_START_CONFIG_DEFAULT();
 		ESP_ERROR_CHECK( esp_smartconfig_start(&cfg) );
@@ -129,11 +132,9 @@ static void smartconfig_example_task(void * parm)
         {
             ESP_LOGI(TAG, "WiFi Connected to ap");
             //esp_wifi_restore();//清除连接；
-            //vTaskDelete(NULL);//删除自身任务；
-
             xQueueSend(wifi_quent, &send, 10000);
-
         }
+
         if(uxBits & ESPTOUCH_DONE_BIT)
         {
             ESP_LOGI(TAG, "smartconfig over");//wifi配置已经过；

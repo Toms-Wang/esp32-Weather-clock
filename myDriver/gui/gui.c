@@ -115,7 +115,7 @@ void gui_update_time(uint8_t xes, uint8_t yes, const uint8_t *back)//显示时�
 
 	tm3 = get_tm_time();
 
-	if(tm3->tm_hour == 0 && tm3->tm_min == 0)//00:00联网更新一次（也可能是三次）时间；
+	if(tm3->tm_hour == 0 && tm3->tm_min == 0 && tm3->tm_sec <= 20)//00:00联网更新一次（也可能是三次）时间；
 	{
 		http_update_time();
 		tm3 = get_tm_time();
