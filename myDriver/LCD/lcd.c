@@ -427,16 +427,16 @@ void LCD_showString(uint16_t x, uint16_t y, char *p, uint16_t color)
 {
 	while(*p!='\0')
 	{
-		if(x>LCD_W-16)
-		{
-			x=0;
-			y+=16;
-		}
-		if(y>LCD_H-16)
-		{
-			y=x=0;
-			LCD_clear(BACK_COLOR);
-		}
+//		if(x>LCD_W-16)
+//		{
+//			x=0;
+//			y+=16;
+//		}
+//		if(y>LCD_H-16)
+//		{
+//			y=x=0;
+//			LCD_clear(BACK_COLOR);
+//		}
 		LCD_showChar(x, y, *p, color);
 		x+=8;
 		p++;
@@ -1240,3 +1240,235 @@ void LCD_showStr48_bc(uint16_t x, uint16_t y, char * Str, uint16_t color, const 
 		Str++;
 	}
 }
+
+//画斜线；
+void LCD_Draw_Line(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_t color)
+{
+	uint16_t x1, x2, y1, y2;
+	uint16_t i, j, k;
+	uint16_t ys, ye;
+	float FL_fShowXy;
+	uint16_t FL_usBase_Y;
+	float FL_fshow_y;
+
+	float FL_f_x;
+	float FL_f_y;
+
+	if(sx > ex)
+	{
+		x1 = ex;
+		x2 = sx;
+		y1 = ey;
+		y2 = sy;
+	}
+	else
+	{
+		x1 = sx;
+		x2 = ex;
+		y1 = sy;
+		y2 = ey;
+	}
+
+	if(x1 == x2)
+	{
+		if(y1 > y2)
+		{
+			ys = y2;
+			ye = y1;
+		}
+		else
+		{
+			ys = y1;
+			ye = y2;
+		}
+
+		for(i = ys; i <= ye; i++)
+		{
+			LCD_drawPoint(x1, i, color);
+		}
+
+	}
+	else if(y1 == y2)
+	{
+//		LCD_SetCursor(x1, y1);
+//		LCD_WriteRAM_Start();
+		LCD_setAddress(x1, y1, x2, y1);
+		for(j = 0; j < x2 - x1 + 1; j++)
+		{
+
+			lcd_color(color);
+		}
+	}
+	else
+	{
+		FL_f_x = (float)(y2 - y1 + 1);
+		FL_f_y = (float)(x2 - x1 + 1);
+		FL_fShowXy = FL_f_x / FL_f_y;//计算斜率；
+
+		if((y2 - y1) >= 0)
+		{
+			FL_f_x = (float)(y2 - y1 + 1);
+			FL_f_y = (float)(x2 - x1 + 1);
+			FL_fShowXy = FL_f_x / FL_f_y;//计算斜率；
+
+			if(FL_fShowXy <= 1)
+			{
+				FL_usBase_Y = 0;
+				for(k = 1; k <= x2 - x1 + 1; k++)
+				{
+					FL_fshow_y = FL_fShowXy * k;
+					if(FL_fshow_y > FL_usBase_Y + 1)
+					{
+						if((FL_fshow_y - FL_usBase_Y - 1) > ((1 * FL_fShowXy) / 2))
+						{
+							LCD_drawPoint(x1 + k - 1, y1 + FL_usBase_Y + 1, color);
+						}
+						else
+						{
+							LCD_drawPoint(x1 + k - 1, y1 + FL_usBase_Y, color);
+						}
+						FL_usBase_Y ++;
+					}
+					else
+					{
+						LCD_drawPoint(x1 + k - 1, y1 + FL_usBase_Y, color);
+					}
+
+				}
+			}
+			else if(FL_fShowXy > 1)
+			{
+				FL_usBase_Y = 0;
+				for(k = 1; k <= x2 - x1 + 1; k++)
+				{
+//					m = 0;
+					FL_fshow_y = FL_fShowXy * k;
+					while((FL_fshow_y > FL_usBase_Y + 1))
+					{
+						LCD_drawPoint(x1 + k - 1, y1 + FL_usBase_Y, color);
+						FL_usBase_Y ++;
+					}
+
+					if((FL_fshow_y - FL_usBase_Y) > 0.5)
+					{
+						LCD_drawPoint(x1 + k - 1, y1 + FL_usBase_Y, color);
+						FL_usBase_Y ++;
+					}
+				}
+			}
+		}
+		else
+		{
+			FL_f_x = (float)(y2 - y1 - 1);
+			FL_f_y = (float)(x2 - x1 + 1);
+			FL_fShowXy = FL_f_x / FL_f_y;//计算斜率；
+
+			if(FL_fShowXy >= -1)
+			{
+				FL_fShowXy = -FL_fShowXy;
+				FL_usBase_Y = 0;
+				for(k = 1; k <= x2 - x1 + 1; k++)
+				{
+					FL_fshow_y = FL_fShowXy * k;
+					if(FL_fshow_y > FL_usBase_Y + 1)
+					{
+						if((FL_fshow_y - FL_usBase_Y - 1) > ((1 * FL_fShowXy) / 2))
+						{
+							LCD_drawPoint(x1 + k - 1, y1 - FL_usBase_Y - 1, color);
+						}
+						else
+						{
+							LCD_drawPoint(x1 + k - 1, y1 - FL_usBase_Y, color);
+						}
+						FL_usBase_Y ++;
+					}
+					else
+					{
+						LCD_drawPoint(x1 + k - 1, y1 - FL_usBase_Y, color);
+					}
+
+				}
+			}
+			else if(FL_fShowXy < -1)
+			{
+				FL_fShowXy = -FL_fShowXy;
+				FL_usBase_Y = 0;
+				for(k = 1; k <= x2 - x1 + 1; k++)
+				{
+					//m = 0;
+					FL_fshow_y = FL_fShowXy * k;
+					while((FL_fshow_y > FL_usBase_Y + 1) && ((y1 - FL_usBase_Y) >= 0))
+					{
+						LCD_drawPoint(x1 + k - 1, y1 - FL_usBase_Y, color);
+						FL_usBase_Y ++;
+					}
+
+					if((FL_fshow_y - FL_usBase_Y) > 0.5)
+					{
+						LCD_drawPoint(x1 + k - 1, y1 - FL_usBase_Y, color);
+						FL_usBase_Y ++;
+					}
+				}
+			}
+		}
+	}
+}
+
+//画圆；
+void LCD_Draw_Circle(uint16_t xs, uint16_t ys, uint16_t RS, uint16_t color)
+{
+	uint16_t x1, y1, r1;
+	uint16_t Base_Y;
+	uint16_t Base_X;
+	uint16_t i;
+
+	x1 = xs;
+	y1 = ys;
+	r1 = RS;
+
+	Base_X = 0;
+	Base_Y = r1;
+
+	while((2 * Base_X * Base_X) < (r1 * r1))
+	{
+		Base_X++;
+	}
+
+	for(i = 0; i < Base_X; i++)
+	{
+		if(((i + 0.5) * (i + 0.5) + (Base_Y - 1) * (Base_Y - 1)) >= (r1 * r1))
+		{
+			Base_Y--;
+		}
+		LCD_drawPoint(x1 + i, y1 + Base_Y, color);//一个1/4之一圆；
+		LCD_drawPoint(x1 + Base_Y, y1 + i, color);
+
+		LCD_drawPoint(x1 + i, y1 - 1 - Base_Y, color);
+		LCD_drawPoint(x1 + Base_Y, y1 - 1 - i, color);
+
+		LCD_drawPoint(x1 - 1 - i, y1 + Base_Y, color);//一个1/4之一圆；
+		LCD_drawPoint(x1 - 1 - Base_Y, y1 + i, color);
+
+		LCD_drawPoint(x1 - 1 - i, y1 - 1 - Base_Y, color);
+		LCD_drawPoint(x1 - 1 - Base_Y, y1 - 1 - i, color);
+	}
+}
+
+//画实体圆；
+void LCD_DrawFullCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius, uint16_t color)
+{
+	uint16_t x, y, r = Radius;
+
+	for(y = Ypos - r; y < Ypos + r; y++)
+	{
+		for(x = Xpos - r; x < Xpos+r; x++)
+		{
+			if(((x-Xpos)*(x-Xpos)+(y-Ypos)*(y-Ypos)) <= r*r)
+			{
+				//putpixel(x,y);
+				LCD_drawPoint(x, y, color);
+			}
+		}
+	}
+}
+

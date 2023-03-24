@@ -7,8 +7,9 @@
 #include "time.h"
 
 void gui_update_back(const uint8_t *back);
-void gui_update_weather(uint8_t xes, uint8_t yes, const uint8_t *back);
+void gui_update_weather(uint16_t xes, uint16_t yes, const uint8_t *back);
 void http_update_time(void);
-void gui_update_time(uint8_t xes, uint8_t yes, const uint8_t *back);
+void gui_update_time(uint16_t xes, uint16_t yes, const uint8_t *back);
+void gui_update_week(uint16_t xes, uint16_t yes, const uint8_t *back);
 
 #endif

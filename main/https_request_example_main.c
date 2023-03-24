@@ -44,10 +44,7 @@
 #include "sdmmc_cmd.h"
 #include "esp_vfs_fat.h"
 #include "sd_spi.h"
-#include "blu_fi.h"
 
-#include "esp_bt.h"
-#include "blu_fi.h"
 #include "gui.h"
 
 
@@ -99,11 +96,15 @@ void lcd_flash_task(void * parm)
 			gui_update_time(0, 0, gImage_bmp320);
 			gui_update_weather(120, 0, gImage_bmp320);
 
+			gui_update_week(0, 160, gImage_bmp320);
+
 			TimerHandle_t timeHandle = xTimerCreate("time_update", 5000, pdTRUE, NULL, time_update);
 			TimerHandle_t weatherHandle= xTimerCreate("weather_update", 5000 * 12 * 5, pdTRUE, NULL, weather_update);
 
 			xTimerStart(timeHandle, 0);
 			xTimerStart(weatherHandle, 0);
+
+//			LCD_DrawFullCircle(160, 120, 30, BLUE);
 
 			while(1)
 			{

@@ -5,7 +5,8 @@ uint8_t len = 0;
 
 static const char *TAG1 = "example1";
 
-static char week_num[7][8]= {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+static char week_num[7][8]  = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+static char week_days[7][5] = {"一", "二", "三", "四","五", "六", "日"};
 
 static char tem_bmp[tem_num][25] = {"晴", "晴夜", "多云", "晴间多云", "晴间多云夜", "大部多云",
 						"大部多云夜", "阴", "阵雨", "雷阵雨", "雷阵雨伴有冰雹", "小雨",
@@ -23,12 +24,14 @@ static char tem_name[tem_num][15] = {"/bmp1.txt",  "/bmp2.txt",  "/bmp3.txt",  "
 								 "/bmp31.txt", "/bmp32.txt", "/bmp33.txt", "/bmp34.txt", "/bmp35.txt", "/bmp36.txt", "/bmp37.txt"
 };
 
+static uint8_t mon_num[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
 void gui_update_back(const uint8_t *back)
 {
 	LCD_Display(0, 0, back);
 }
 
-void gui_update_weather(uint8_t xes, uint8_t yes, const uint8_t *back)//更新天气图标；
+void gui_update_weather(uint16_t xes, uint16_t yes, const uint8_t *back)//更新天气图标；
 {
 	uint8_t cit[20]  = {0};
 	uint8_t wea[20]  = {0};
@@ -107,7 +110,7 @@ void http_update_time(void)//联网更新时间；
 	}
 }
 
-void gui_update_time(uint8_t xes, uint8_t yes, const uint8_t *back)//显示时间
+void gui_update_time(uint16_t xes, uint16_t yes, const uint8_t *back)//显示时间
 {
 	struct tm* tm3;
 	time_str_t time0;
@@ -154,7 +157,95 @@ void gui_update_time(uint8_t xes, uint8_t yes, const uint8_t *back)//显示时�
 	}
 }
 
-void gui_update_week(uint8_t xes, uint8_t yes, const uint8_t *back)//显示时间
+void gui_update_week(uint16_t xes, uint16_t yes, const uint8_t *back)//显示时间
 {
+	struct tm* tm3;
+	char j_str[12] = {0};
+	uint16_t x_start = xes + 15;
 
+	uint8_t mon = 0;
+	uint8_t day = 0;
+	uint8_t week = 0;
+	uint8_t year = 0;
+
+	uint8_t one_week = 0;
+	uint8_t mon_line = 0;
+	uint8_t mon_day = 0;
+
+	uint8_t two_num = 0;
+
+	tm3 = get_tm_time();
+
+	mon  = tm3 -> tm_mon + 1;
+	day  = tm3 -> tm_mday;
+	week = tm3 ->tm_wday;
+	year = tm3->tm_year;
+
+	one_week = ((week + 7)-((day - 1) % 7)) % 7;
+	if(one_week == 0)//1~7;
+	{
+		one_week = 7;
+	}
+
+	mon_day = mon_num[mon - 1];
+
+	if(mon == 2 && (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0)))
+	{
+		mon_day++;
+	}
+
+	printf("mon = %d, mon_day = %d\n", mon, mon_day);
+
+	mon_line = (mon_day - (7 - one_week + 1)) / 7 + 1 + (((mon_day - (7 - one_week + 1)) % 7) ? 1 : 0);
+	printf("mon_line = %d\n", mon_line);
+
+	if(mon_line == 6)
+	{
+		two_num = 22;
+	}
+	else if(mon_line == 5)
+	{
+		two_num = 26;
+	}
+	else if(mon_line == 4)
+	{
+		two_num = 30;
+	}
+
+	for(uint8_t i = 0; i < 7; i++)
+	{
+		Display_CE_bc(x_start + 7 + i * 30, yes + (two_num - 16) / 2, week_days[i], WHITE, back);
+	}
+
+	LCD_Draw_Line(x_start, yes, x_start + 210 - 1, yes, WHITE);
+	LCD_Draw_Line(x_start, yes, x_start, yes + two_num * (mon_line + 1) - 1, WHITE);
+	LCD_Draw_Line(x_start + 210 - 1, yes, x_start + 210 - 1, yes + two_num * (mon_line + 1) - 1, WHITE);
+	LCD_Draw_Line(x_start, yes + two_num * (mon_line + 1) - 1, x_start + 210 - 1, yes + two_num * (mon_line + 1) - 1, WHITE);
+
+	int week_sum = 0;//如果是一位则居中；
+
+	for(uint8_t j = 0; j < mon_day; j++)//以0~6映射1~7；所以后面运算-1；
+	{
+		sprintf((char *)j_str, "%d", (j + 1));
+
+		week_sum = ((j + one_week - 1) % 7) * 30;
+
+		if(day == j + 1)
+		{
+			LCD_DrawFullCircle(x_start + 7 + ((day - 1 + one_week - 1) % 7) * 30 + 8, yes + (two_num - 16) / 2 + (((day - 1 + one_week -1) / 7) + 1) * two_num + 8, 11, BLUE);
+		}
+
+		if(strlen(j_str) == 1)
+		{
+			week_sum += 4;
+		}
+
+		LCD_showString(x_start + 7 + week_sum /*((j + one_week - 1) % 7) * 30*/, yes + (two_num - 16) / 2 + (((j + one_week -1) / 7) + 1) * two_num, j_str, WHITE);
+
+		memset(j_str, 0, sizeof(j_str));
+
+	}
+	//LCD_DrawFullCircle(x_start + 7 + ((day - 1 + one_week - 1) % 7) * 30 + 8, yes + (two_num - 16) / 2 + (((day - 1 + one_week -1) / 7) + 1) * two_num + 8, 11, BLUE);
+//	LCD_Draw_Circle(x_start + 7 + ((day - 1 + one_week - 1) % 7) * 30 + 8, yes + (two_num - 16) / 2 + (((day - 1 + one_week -1) / 7) + 1) * two_num + 8, 10, BLUE);
+//	LCD_Draw_Circle(x_start + 7 + ((day - 1 + one_week - 1) % 7) * 30 + 8, yes + (two_num - 16) / 2 + (((day - 1 + one_week -1) / 7) + 1) * two_num + 8, 11, BLUE);
 }

@@ -42,26 +42,17 @@
 #define LCD_W 240
 #define LCD_H 320
 
-#define LCD_HOST    HSPI_HOST
+#define LCD_HOST    SPI2_HOST
 
-//#define PIN_NUM_MISO 25
-//#define PIN_NUM_MOSI 23
-//#define PIN_NUM_CLK  19
-//
-//#define PIN_NUM_CS   22
-//
-//#define PIN_NUM_DC   21
-//#define PIN_NUM_RST  18
-//#define PIN_NUM_BCKL 15
-
-#define PIN_NUM_CS   15
-#define PIN_NUM_CLK  14
-#define PIN_NUM_MISO 12
+#define PIN_NUM_MISO 15
 #define PIN_NUM_MOSI 13
+#define PIN_NUM_CLK  12
 
-#define PIN_NUM_DC   25
-#define PIN_NUM_RST  26
-#define PIN_NUM_BCKL 27
+#define PIN_NUM_CS   11
+
+#define PIN_NUM_DC   10
+#define PIN_NUM_RST  21
+#define PIN_NUM_BCKL 14
 
 
 void LCD_clear(uint16_t color);
@@ -99,5 +90,9 @@ void LCD_showChar48_bc(uint16_t x, uint16_t y, uint8_t chr, uint16_t color, cons
 
 void LCD_showStr48_bc(uint16_t x, uint16_t y, char * Str, uint16_t color, const uint8_t * back);
 
+void LCD_Draw_Circle(uint16_t xs, uint16_t ys, uint16_t RS, uint16_t color);
+void LCD_Draw_Line(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_t color);
+
+void LCD_DrawFullCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius, uint16_t color);
 
 #endif

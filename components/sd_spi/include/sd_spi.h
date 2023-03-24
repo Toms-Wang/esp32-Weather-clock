@@ -15,22 +15,14 @@
 #include "sdmmc_cmd.h"
 #include "esp_vfs_fat.h"
 
-//SDMMC_FREQ_DEFAULT
-#define SD_HOST    VSPI_HOST
+#define SD_HOST    SPI3_HOST
 #define MOUNT_POINT "/sdcard"
 
-//#define PIN_SD_MISO 25
-//#define PIN_SD_MOSI 26
-//#define PIN_SD_CLK  27
-//
-////#define PIN_SD_CS   14
-//#define PIN_SD_CS   23
-////#define PIN_SD_CS   32
+#define PIN_SD_MISO 40
+#define PIN_SD_MOSI 42
+#define PIN_SD_CLK  41
 
-#define PIN_SD_CS   5
-#define PIN_SD_CLK  18
-#define PIN_SD_MISO 19
-#define PIN_SD_MOSI 23
+#define PIN_SD_CS   8
 
 void SD_GPIO_Init(void);
 void spi_SD_init(void);
