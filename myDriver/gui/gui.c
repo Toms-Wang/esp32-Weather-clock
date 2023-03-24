@@ -153,3 +153,8 @@ void gui_update_time(uint8_t xes, uint8_t yes, const uint8_t *back)//显示时�
 		Display_CE_bc(xes + 80 , yes + 120, week_num[tm3->tm_wday], WHITE, back);
 	}
 }
+
+void gui_update_week(uint8_t xes, uint8_t yes, const uint8_t *back)//显示时间
+{
+
+}

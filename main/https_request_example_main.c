@@ -52,22 +52,26 @@
 
 
 QueueHandle_t wifi_quent;
-
 TimerHandle_t timeHandle;
 TimerHandle_t weatherHandle;
+
+uint8_t update_weather_status = 0;
+uint8_t update_time_status = 0;
 
 static const char *TAG1 = "example1";
 
 static void time_update(TimerHandle_t xTimer)
 {
 	(void)xTimer;
-	gui_update_time(0, 0, gImage_bmp320);
+	//gui_update_time(0, 0, gImage_bmp320);
+	update_time_status = 1;
 }
 
 static void weather_update(TimerHandle_t xTimer)
 {
 	(void)xTimer;
-	gui_update_weather(120, 0, gImage_bmp320);
+	//gui_update_weather(120, 0, gImage_bmp320);
+	update_weather_status = 1;
 }
 
 void lcd_flash_task(void * parm)
@@ -76,9 +80,7 @@ void lcd_flash_task(void * parm)
 
 	while(1)
 	{
-
 		xQueueReceive(wifi_quent, &flash_state, 1000);
-
 
 		if(flash_state == 6)
 		{
@@ -107,6 +109,17 @@ void lcd_flash_task(void * parm)
 			{
 				vTaskDelay(5 / portTICK_PERIOD_MS);
 
+				if(update_weather_status)
+				{
+					update_weather_status = 0;
+					gui_update_weather(120, 0, gImage_bmp320);
+				}
+
+				if(update_time_status)
+				{
+					update_time_status = 0;
+					gui_update_time(0, 0, gImage_bmp320);
+				}
 			}
 		}
 	}
