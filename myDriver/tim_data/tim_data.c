@@ -19,7 +19,6 @@
 #include "esp_http_client.h"
 
 
-
 static const char *TAG = "example";
 
 #define MAX_HTTP_OUTPUT_BUFFER 2048
@@ -118,6 +117,7 @@ uint8_t http_get_time(char * pxtim)
 
 uint8_t http_get_time2(char * pxtim)
 {
+	printf("1\n");
 	uint8_t get_time_status = 0;
 //02-1 定义需要的变量
     char output_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};   //用于接收通过http协议返回的数据
@@ -144,6 +144,7 @@ uint8_t http_get_time2(char * pxtim)
     // 与目标主机创建连接，并且声明写入内容长度为0
     esp_err_t err = esp_http_client_open(client, 0);
 
+    printf("2\n");
     //如果连接失败
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));

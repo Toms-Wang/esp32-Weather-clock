@@ -142,6 +142,7 @@ void app_main(void)
 
     wifi_quent = xQueueCreate(5, sizeof(int));
 
+    //ESP_ERROR_CHECK(example_connect());
 	initialise_wifi();
 
 	xTaskCreate(lcd_flash_task, "lcd_flash_task", 8192, NULL, 3, NULL);
