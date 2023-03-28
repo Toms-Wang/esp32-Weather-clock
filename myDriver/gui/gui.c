@@ -174,6 +174,7 @@ void gui_update_week(uint16_t xes, uint16_t yes, const uint8_t *back)//显示时
 
 	uint8_t two_num = 0;
 
+	LCD_clear_nDisplay(xes, yes, back);
 	tm3 = get_tm_time();
 
 	mon  = tm3 -> tm_mon + 1;

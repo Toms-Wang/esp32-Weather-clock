@@ -699,6 +699,42 @@ void LCD_Display(uint8_t xes, uint8_t yes, const uint8_t *pic)
 //	}
 }
 
+void LCD_clear_nDisplay(uint8_t xes, uint8_t yes, const uint8_t *pic)//清除n行背景；清除半个屏幕，位置自定义；
+{
+	int len = 0;
+	uint16_t width 		= LCD_W;
+	uint16_t height 	= LCD_H - yes;
+	LCD_setAddress(xes, yes, xes + width - 1, yes + height - 1);
+
+	len = width * height * 2;
+
+	if(len <= SPI_MAX_NUM)
+	{
+		lcd_long_data(pic + 8 + LCD_W * yes * 2, len);
+	}
+	else if(len > SPI_MAX_NUM)
+	{
+		int num = len /(1024 * 10);
+		int tum = len %(1024 * 10);
+		for(int j = 0; j < num; j++)
+		{
+			lcd_long_data(pic + 8 + LCD_W * yes * 2 + j * SPI_MAX_NUM, SPI_MAX_NUM);
+		}
+
+		if(tum != 0)
+		{
+			lcd_long_data(pic + 8 +LCD_W * yes * 2 + num * SPI_MAX_NUM, tum);
+		}
+	}
+
+//	for(int i = 0; i < height; i++)
+//	{
+//		for(int j = 0; j < width; j++)
+//		{
+//			lcd_color(((uint16_t)(pic[8 + (i * width + j) * 2]) << 8) | pic[8 + (i * width + j) * 2 + 1]);
+//		}
+//	}
+}
 
 //显示天气局部图；
 void LCD_Display_Icon(uint8_t xes, uint8_t yes, uint8_t *pic, const uint8_t *back)

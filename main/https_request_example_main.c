@@ -120,6 +120,14 @@ void lcd_flash_task(void * parm)
 				{
 					update_time_status = 0;
 					gui_update_time(0, 0, gImage_bmp320);
+
+					struct tm* tm3 = get_tm_time();
+
+					if(tm3->tm_hour == 0 && tm3->tm_min == 0 && tm3->tm_sec <= 5)//00:00联网更新一次（也可能是二次）时间；
+					{
+						gui_update_week(0, 160, gImage_bmp320);
+
+					}
 				}
 			}
 		}

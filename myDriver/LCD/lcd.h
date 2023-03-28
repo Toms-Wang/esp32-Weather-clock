@@ -94,5 +94,6 @@ void LCD_Draw_Circle(uint16_t xs, uint16_t ys, uint16_t RS, uint16_t color);
 void LCD_Draw_Line(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_t color);
 
 void LCD_DrawFullCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius, uint16_t color);
+void LCD_clear_nDisplay(uint8_t xes, uint8_t yes, const uint8_t *pic);
 
 #endif
