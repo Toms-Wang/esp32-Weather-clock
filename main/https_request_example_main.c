@@ -104,8 +104,6 @@ void lcd_flash_task(void * parm)
 			xTimerStart(timeHandle, 0);
 			xTimerStart(weatherHandle, 0);
 
-//			LCD_DrawFullCircle(160, 120, 30, BLUE);
-
 			while(1)
 			{
 				vTaskDelay(5 / portTICK_PERIOD_MS);

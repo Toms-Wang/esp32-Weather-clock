@@ -103,7 +103,6 @@ static void smartconfig_example_task(void * parm)
 {
 	int send = 5;
 	int send2 = 6;
-//	esp_err_t ret = ESP_FAIL;
 	int mat = 0;
 
     EventBits_t uxBits;
@@ -118,7 +117,6 @@ not_connect:
     {
     	ESP_LOGI(TAG, "already set, SSID is: %s, start connect", myconfig.sta.ssid);
     	esp_wifi_connect();
-    	//ESP_LOGI(TAG, "ret = %d\n", ret);
     }
     else
     {
@@ -135,11 +133,6 @@ not_connect:
 			ESP_ERROR_CHECK( esp_smartconfig_start(&cfg) );
 		}
     }
-
-//    if(ret != ESP_OK)
-//    {
-//    	xQueueSend(wifi_quent, &send2, 10000);
-//    }
 
     while (1)
     {
@@ -160,13 +153,6 @@ not_connect:
         		ESP_LOGI(TAG, "have no set, start to config");
         		esp_wifi_restore();
         		goto not_connect;
-//        		esp_wifi_disconnect();
-//        		esp_wifi_restore();
-//				xQueueSend(wifi_quent, &send2, 10000);
-//
-//				ESP_ERROR_CHECK( esp_smartconfig_set_type(SC_TYPE_ESPTOUCH) );
-//				smartconfig_start_config_t cfg = SMARTCONFIG_START_CONFIG_DEFAULT();
-//				ESP_ERROR_CHECK( esp_smartconfig_start(&cfg) );
         	}
 
         }
