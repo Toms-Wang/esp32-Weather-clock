@@ -122,15 +122,18 @@ not_connect:
     }
     else
     {
-    	mat = 1;
+    	if(!mat)
+		{
+			mat = 1;
 //not_connect:
-		//esp_wifi_disconnect();
-    	ESP_LOGI(TAG, "have no set, start to config");
-    	xQueueSend(wifi_quent, &send2, 10000);
+			//esp_wifi_disconnect();
+			ESP_LOGI(TAG, "have no set, start to config");
+			xQueueSend(wifi_quent, &send2, 10000);
 
-    	ESP_ERROR_CHECK( esp_smartconfig_set_type(SC_TYPE_ESPTOUCH) );
-		smartconfig_start_config_t cfg = SMARTCONFIG_START_CONFIG_DEFAULT();
-		ESP_ERROR_CHECK( esp_smartconfig_start(&cfg) );
+			ESP_ERROR_CHECK( esp_smartconfig_set_type(SC_TYPE_ESPTOUCH) );
+			smartconfig_start_config_t cfg = SMARTCONFIG_START_CONFIG_DEFAULT();
+			ESP_ERROR_CHECK( esp_smartconfig_start(&cfg) );
+		}
     }
 
 //    if(ret != ESP_OK)
