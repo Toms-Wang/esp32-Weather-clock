@@ -109,8 +109,8 @@ static void smartconfig_example_task(void * parm)
 
     wifi_config_t myconfig = {0};
 
-not_connect:
-	memset(&myconfig, 0, sizeof(wifi_config_t));
+//not_connect:
+
     esp_wifi_get_config(ESP_IF_WIFI_STA, &myconfig);//获取过配网信息。
 
     if(strlen((char *)myconfig.sta.ssid) > 0)
@@ -137,13 +137,21 @@ not_connect:
     while (1)
     {
 //        uxBits = xEventGroupWaitBits(s_wifi_event_group, CONNECTED_BIT | ESPTOUCH_DONE_BIT, true, false, portMAX_DELAY);
-    	uxBits = xEventGroupWaitBits(s_wifi_event_group, CONNECTED_BIT | ESPTOUCH_DONE_BIT, true, false, 5000);
+    	uxBits = xEventGroupWaitBits(s_wifi_event_group, CONNECTED_BIT | ESPTOUCH_DONE_BIT, true, false, 15000);
     	if(uxBits & CONNECTED_BIT)
         {
             ESP_LOGI(TAG, "WiFi Connected to ap");
             //esp_wifi_restore();//清除连接；
+            mat = 1;
             xQueueSend(wifi_quent, &send, 10000);
         }
+    	else if(uxBits & ESPTOUCH_DONE_BIT)
+		{
+			ESP_LOGI(TAG, "smartconfig over");//wifi配置已经过；
+			esp_smartconfig_stop();
+			mat = 1;
+			vTaskDelete(NULL);//删除自身任务；
+		}
         else
         {
         	if(!mat)
@@ -152,17 +160,19 @@ not_connect:
         		printf("wifi not connect\n");
         		ESP_LOGI(TAG, "have no set, start to config");
         		esp_wifi_restore();
-        		goto not_connect;
+        		//memset(&myconfig, 0, sizeof(wifi_config_t));
+        		//goto not_connect;
+
+        		xQueueSend(wifi_quent, &send2, 10000);
+
+				ESP_ERROR_CHECK( esp_smartconfig_set_type(SC_TYPE_ESPTOUCH) );
+				smartconfig_start_config_t cfg = SMARTCONFIG_START_CONFIG_DEFAULT();
+				ESP_ERROR_CHECK( esp_smartconfig_start(&cfg) );
         	}
 
         }
 
-        if(uxBits & ESPTOUCH_DONE_BIT)
-        {
-            ESP_LOGI(TAG, "smartconfig over");//wifi配置已经过；
-            esp_smartconfig_stop();
-            vTaskDelete(NULL);//删除自身任务；
-        }
+
     }
 }
 

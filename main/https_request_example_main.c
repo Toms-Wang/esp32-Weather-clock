@@ -74,6 +74,7 @@ static void weather_update(TimerHandle_t xTimer)
 void lcd_flash_task(void * parm)
 {
 	int flash_state = 0;
+	int week_update = 0;
 
 	while(1)
 	{
@@ -125,6 +126,12 @@ void lcd_flash_task(void * parm)
 					{
 						gui_update_week(0, 160, gImage_bmp320);
 
+					}
+
+					if(!week_update)
+					{
+						week_update = 1;
+						gui_update_week(0, 160, gImage_bmp320);
 					}
 				}
 			}
