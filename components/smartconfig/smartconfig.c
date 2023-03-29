@@ -106,10 +106,7 @@ static void smartconfig_example_task(void * parm)
 	int mat = 0;
 
     EventBits_t uxBits;
-
     wifi_config_t myconfig = {0};
-
-//not_connect:
 
     esp_wifi_get_config(ESP_IF_WIFI_STA, &myconfig);//获取过配网信息。
 
@@ -123,7 +120,6 @@ static void smartconfig_example_task(void * parm)
     	if(!mat)
 		{
 			mat = 1;
-//not_connect:
 			//esp_wifi_disconnect();
 			ESP_LOGI(TAG, "have no set, start to config");
 			xQueueSend(wifi_quent, &send2, 10000);
@@ -160,8 +156,6 @@ static void smartconfig_example_task(void * parm)
         		printf("wifi not connect\n");
         		ESP_LOGI(TAG, "have no set, start to config");
         		esp_wifi_restore();
-        		//memset(&myconfig, 0, sizeof(wifi_config_t));
-        		//goto not_connect;
 
         		xQueueSend(wifi_quent, &send2, 10000);
 
@@ -171,8 +165,6 @@ static void smartconfig_example_task(void * parm)
         	}
 
         }
-
-
     }
 }
 
