@@ -9,6 +9,7 @@ set(srcs
 ../myDriver/weather/weather.c
 ../myDriver/tim_data/tim_data.c
 ../myDriver/gui/gui.c
+../myDriver/key/key.c
  )
 
 set(inc 
@@ -18,6 +19,7 @@ set(inc
 ../myDriver/weather/
 ../myDriver/tim_data/
 ../myDriver/gui/
+../myDriver/key/
  )
 
 idf_component_register(SRCS ${srcs}

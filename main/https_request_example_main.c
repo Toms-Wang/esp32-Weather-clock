@@ -46,7 +46,7 @@
 #include "sd_spi.h"
 
 #include "gui.h"
-
+#include "key.h"
 
 QueueHandle_t wifi_quent;
 TimerHandle_t timeHandle;
@@ -148,6 +148,7 @@ void app_main(void)
     LCD_Config_ST7789();
     spi_SD_init();
     Led_Config();
+	key_config();
 
     gui_update_back(gImage_bmp320);
 
@@ -165,3 +166,5 @@ void app_main(void)
     	vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
+
+
