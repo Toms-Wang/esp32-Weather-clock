@@ -184,8 +184,6 @@ void LCD_Config_ST7789(void)
 	gpio_set_level(PIN_NUM_RST, 1);
 	vTaskDelay(100 / portTICK_RATE_MS);
 
-
-
 	lcd_cmd(0x11);
 	vTaskDelay(120 / portTICK_RATE_MS);
 
