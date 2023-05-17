@@ -13,7 +13,7 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "nvs_flash.h"
-#include "protocol_examples_common.h"
+//#include "protocol_examples_common.h"
 #include "esp_netif.h"
 #include "driver/gpio.h"
 

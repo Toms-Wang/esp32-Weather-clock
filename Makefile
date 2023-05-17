@@ -3,8 +3,9 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := https_request1
+PROJECT_NAME := https_request_weather
 
-EXTRA_COMPONENT_DIRS = $(IDF_PATH)/examples/common_components/protocol_examples_common
+COMPONENT_ADD_INCLUDEDIRS := components/include
+#EXTRA_COMPONENT_DIRS = $(IDF_PATH)/examples/common_components/protocol_examples_common
 
 include $(IDF_PATH)/make/project.mk

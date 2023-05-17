@@ -22,7 +22,7 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "nvs_flash.h"
-#include "protocol_examples_common.h"
+//#include "protocol_examples_common.h"
 #include "esp_netif.h"
 
 #include "lwip/err.h"
@@ -47,7 +47,10 @@
 
 #include "gui.h"
 #include "key.h"
+#include "WIFI.h"
+#include "blufi_example_main.h"
 
+SemaphoreHandle_t BLUFI_sem = NULL;
 QueueHandle_t wifi_quent;
 TimerHandle_t timeHandle;
 TimerHandle_t weatherHandle;
@@ -55,19 +58,17 @@ TimerHandle_t weatherHandle;
 uint8_t update_weather_status = 0;
 uint8_t update_time_status = 0;
 
-static const char *TAG1 = "example1";
+static const char *TAG1 = "main";
 
 static void time_update(TimerHandle_t xTimer)
 {
 	(void)xTimer;
-	//gui_update_time(0, 0, gImage_bmp320);
 	update_time_status = 1;
 }
 
 static void weather_update(TimerHandle_t xTimer)
 {
 	(void)xTimer;
-	//gui_update_weather(120, 0, gImage_bmp320);
 	update_weather_status = 1;
 }
 
@@ -78,7 +79,7 @@ void lcd_flash_task(void * parm)
 
 	while(1)
 	{
-		xQueueReceive(wifi_quent, &flash_state, 1000);
+		xQueueReceive(wifi_quent, &flash_state, portMAX_DELAY);
 
 		if(flash_state == 6)
 		{
@@ -142,8 +143,8 @@ void lcd_flash_task(void * parm)
 void app_main(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+//    ESP_ERROR_CHECK(esp_netif_init());
+//    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     LCD_Config_ST7789();
     spi_SD_init();
@@ -154,10 +155,11 @@ void app_main(void)
 
     LED_OFF();
 
+    BLUFI_sem = xSemaphoreCreateBinary();
     wifi_quent = xQueueCreate(5, sizeof(int));
 
-    //ESP_ERROR_CHECK(example_connect());
-	initialise_wifi();
+//	initialise_wifi();
+	Initialise_Wifi();
 
 	xTaskCreate(lcd_flash_task, "lcd_flash_task", 8192, NULL, 3, NULL);
 
