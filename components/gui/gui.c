@@ -85,6 +85,8 @@ void gui_update_weather(uint16_t xes, uint16_t yes, const uint8_t *back)//更新
 			Display_CE_bc(p_x - (strlen((char*)wea) / 3 * 16 + (3 + strlen((char *)tem)) * 8) / 2, p_y, (char *)wea, WHITE, back);
 
 			Display_CE_bc(p_x + (strlen((char*)wea) / 3 * 16 + (3 + strlen((char *)tem)) * 8) / 2 - (2 + strlen((char *)tem)) * 8 , p_y, (char *)tem, WHITE, back);
+			Display_CE_bc(p_x + (strlen((char*)wea) / 3 * 16 + (3 + strlen((char *)tem)) * 8) / 2 - (2 + strlen((char *)tem) + 1) * 8 , p_y, (char *)" ", WHITE, back);
+
 			LCD_ShowChinese_C_bc(p_x + (strlen((char*)wea) / 3 * 16 + (3 + strlen((char *)tem)) * 8) / 2 - 2 * 8, p_y, 0xA1, 0xE6, WHITE, back);
 		}
 

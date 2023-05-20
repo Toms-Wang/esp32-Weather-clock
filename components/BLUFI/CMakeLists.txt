@@ -10,5 +10,5 @@ set(inc
 
 idf_component_register(SRCS ${srcs}
                     INCLUDE_DIRS ${inc}
-                    REQUIRES bt nvs_flash  WIFI
+                    REQUIRES bt nvs_flash  WIFI mbedtls
 )

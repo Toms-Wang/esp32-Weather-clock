@@ -25,6 +25,8 @@ static const char *TAG = "example";
 #define TIME_URL "http://quan.suning.com/getSysTime.do"
 #define TIME_URL2 "http://api.k780.com/?app=life.time&appkey=10003&sign=b59bc3ef6191eb9f747dd4e83c99f2a4&format=json"
 
+char output_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};   //用于接收通过http协议返回的数据
+
 uint8_t http_get_time(char * pxtim)
 {
 	uint8_t get_time_status = 0;
@@ -83,7 +85,7 @@ uint8_t http_get_time(char * pxtim)
             {
             	get_time_status = 1;
                 //打印响应内容，包括响应状态，响应体长度及其内容
-                ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d",
+                ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %lld",
                 esp_http_client_get_status_code(client),				//获取响应状态信息
                 esp_http_client_get_content_length(client));			//获取响应信息长度
                 printf("data:%s\n", output_buffer);
@@ -117,10 +119,10 @@ uint8_t http_get_time(char * pxtim)
 
 uint8_t http_get_time2(char * pxtim)
 {
-	printf("1\n");
+//	printf("1\n");
 	uint8_t get_time_status = 0;
-//02-1 定义需要的变量
-    char output_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};   //用于接收通过http协议返回的数据
+
+//    char output_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};   //用于接收通过http协议返回的数据
     int content_length = 0;  //http协议头的长度
 
    //定义http配置结构体，并且进行清零
@@ -128,23 +130,23 @@ uint8_t http_get_time2(char * pxtim)
     memset(&config,0,sizeof(config));
 
     //向配置结构体内部写入url
-
+//    printf("2\n");
 
     //static const char *URL = TIME_URL;
     config.url = TIME_URL2;
 
     //初始化结构体
     esp_http_client_handle_t client = esp_http_client_init(&config);	//初始化http连接
-
+//    printf("3\n");
     //设置发送请求
     esp_http_client_set_method(client, HTTP_METHOD_GET);
-
+//    printf("4\n");
     //02-3 循环通讯
 
     // 与目标主机创建连接，并且声明写入内容长度为0
     esp_err_t err = esp_http_client_open(client, 0);
 
-    printf("2\n");
+//    printf("5\n");
     //如果连接失败
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
@@ -152,10 +154,10 @@ uint8_t http_get_time2(char * pxtim)
     //如果连接成功
     else
     {
-
+//    	printf("6\n");
         //读取目标主机的返回内容的协议头
         content_length = esp_http_client_fetch_headers(client);
-
+//        printf("7\n");
         //如果协议头长度小于0，说明没有成功读取到
         if (content_length < 0)
         {
@@ -171,7 +173,7 @@ uint8_t http_get_time2(char * pxtim)
             {
             	get_time_status = 1;
                 //打印响应内容，包括响应状态，响应体长度及其内容
-                ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d",
+                ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %lld",
                 esp_http_client_get_status_code(client),				//获取响应状态信息
                 esp_http_client_get_content_length(client));			//获取响应信息长度
                 printf("data:%s\n", output_buffer);

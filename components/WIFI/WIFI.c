@@ -2,6 +2,10 @@
 #include "esp_blufi_api.h"
 #include "esp_blufi.h"
 
+#define EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY  2
+#define EXAMPLE_INVALID_REASON                 255
+#define EXAMPLE_INVALID_RSSI                   -128
+
 static const char *TAG = "WIFI";
 
 wifi_config_t sta_config;
@@ -14,12 +18,16 @@ extern QueueHandle_t wifi_quent;
 
 static EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
+static uint8_t example_wifi_retry = 0;
 
 bool gl_sta_connected = false;
 uint8_t gl_sta_bssid[6];
 uint8_t gl_sta_ssid[32];
 int gl_sta_ssid_len;
 wifi_sta_list_t gl_sta_list;
+bool gl_sta_is_connecting = false;
+esp_blufi_extra_info_t gl_sta_conn_info;
+
 
 extern bool ble_is_connected;
 TimerHandle_t   WIFI_Handle;
@@ -102,6 +110,41 @@ void get_mac_address(void)
     ESP_LOGI(TAG, "get mac address:%s", mac);
 }
 
+static void example_record_wifi_conn_info(int rssi, uint8_t reason)
+{
+    memset(&gl_sta_conn_info, 0, sizeof(esp_blufi_extra_info_t));
+    if (gl_sta_is_connecting) {
+        gl_sta_conn_info.sta_max_conn_retry_set = true;
+        gl_sta_conn_info.sta_max_conn_retry = EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY;
+    } else {
+        gl_sta_conn_info.sta_conn_rssi_set = true;
+        gl_sta_conn_info.sta_conn_rssi = rssi;
+        gl_sta_conn_info.sta_conn_end_reason_set = true;
+        gl_sta_conn_info.sta_conn_end_reason = reason;
+    }
+}
+
+static void example_wifi_connect(void)
+{
+    example_wifi_retry = 0;
+    gl_sta_is_connecting = (esp_wifi_connect() == ESP_OK);
+    example_record_wifi_conn_info(EXAMPLE_INVALID_RSSI, EXAMPLE_INVALID_REASON);
+}
+
+
+static bool example_wifi_reconnect(void)
+{
+    bool ret;
+    if (gl_sta_is_connecting && example_wifi_retry++ < EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY) {
+    	ESP_LOGI(TAG, "BLUFI WiFi starts reconnection\n");
+        gl_sta_is_connecting = (esp_wifi_connect() == ESP_OK);
+        example_record_wifi_conn_info(EXAMPLE_INVALID_RSSI, EXAMPLE_INVALID_REASON);
+        ret = true;
+    } else {
+        ret = false;
+    }
+    return ret;
+}
 
 int softap_get_current_connection_number(void)
 {
@@ -165,6 +208,8 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
     wifi_event_sta_connected_t *event;
+	wifi_event_sta_disconnected_t *disconnected_event;
+
 //    wifi_mode_t mode;
 
     switch (event_id)
@@ -207,6 +252,12 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
 
         break;
     case WIFI_EVENT_STA_DISCONNECTED:
+    	if (gl_sta_connected == false && example_wifi_reconnect() == false)
+    	{
+			gl_sta_is_connecting = false;
+			disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
+			example_record_wifi_conn_info(disconnected_event->rssi, disconnected_event->reason);
+		}
         /* This is a workaround as ESP32 WiFi libs don't currently
            auto-reassociate. */
         gl_sta_connected = false;

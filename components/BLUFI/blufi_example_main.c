@@ -19,16 +19,19 @@
 
 extern SemaphoreHandle_t BLUFI_sem;
 
-
+static const char* TAG = "Blufi";
 extern uint8_t  blufi_state;
 
 /* store the station info for send back to phone */
 extern bool gl_sta_connected;
+static bool gl_sta_got_ip = false;
 bool ble_is_connected = false;
 extern uint8_t gl_sta_bssid[6];
 extern uint8_t gl_sta_ssid[32];
 extern int gl_sta_ssid_len;
 extern wifi_config_t sta_config;
+extern bool gl_sta_is_connecting;
+extern esp_blufi_extra_info_t gl_sta_conn_info;
 
 extern TimerHandle_t WIFI_Handle;
 
@@ -178,12 +181,16 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
             info.sta_bssid_set = true;
             info.sta_ssid = gl_sta_ssid;
             info.sta_ssid_len = gl_sta_ssid_len;
-            esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
+            esp_blufi_send_wifi_conn_report(mode, gl_sta_got_ip ? ESP_BLUFI_STA_CONN_SUCCESS : ESP_BLUFI_STA_NO_IP, softap_get_current_connection_number(), &info);
         }
+        else if (gl_sta_is_connecting)
+        {
+        	esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONNECTING, softap_get_current_connection_number(), &gl_sta_conn_info);
+		}
         else
         {
-            esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_FAIL, softap_get_current_connection_number(), NULL);
-        }
+        	esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_FAIL, softap_get_current_connection_number(), &gl_sta_conn_info);
+		}
         BLUFI_INFO("BLUFI get wifi status from AP\n");
 
         break;
@@ -229,7 +236,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
         break;
     }
     case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA:
-        BLUFI_INFO("Recv Custom Data %d\n", param->custom_data.data_len);
+    	//ESP_LOGI(TAG, "Recv Custom Data %d\n", param->custom_data.data_len);
         esp_log_buffer_hex("Custom Data", param->custom_data.data, param->custom_data.data_len);
 //        esp_blufi_send_custom_data(param->custom_data.data, param->custom_data.data_len);//blufi send;
         if(param->custom_data.data_len >= 2 && param->custom_data.data_len <= 3)

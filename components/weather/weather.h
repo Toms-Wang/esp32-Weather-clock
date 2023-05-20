@@ -20,7 +20,7 @@
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
 #include "cJSON.h"
-#include "lcd.h"
+//#include "lcd.h"
 
 #include "esp_tls.h"
 #if CONFIG_MBEDTLS_CERTIFICATE_BUNDLE

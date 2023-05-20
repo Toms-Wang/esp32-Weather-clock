@@ -54,6 +54,8 @@
 #define PIN_NUM_RST  21
 #define PIN_NUM_BCKL 14
 
+void LCD_Display_bmp54(const uint8_t *pic);
+void lcd_display_back(uint8_t xes, uint8_t yes, const uint8_t *pic);
 
 void LCD_clear(uint16_t color);
 void LCD_Fill(uint16_t color);

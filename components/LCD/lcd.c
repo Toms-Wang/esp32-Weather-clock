@@ -1,7 +1,6 @@
 #include "lcd.h"
 #include "font.h"
 #include "hzk.h"
-#include "ff.h"
 #include "gbk.h"
 
 #define MOUNT_POINT "/sdcard"
@@ -14,6 +13,8 @@ uint8_t color_t[LCD_W * 2] = {0};
 
 uint8_t bmp52[28810];//天气图标缓冲区；
 uint8_t bmp53[28810];
+//uint8_t bmp54[LCD_W * LCD_H * 2];
+
 
 void lcd_spi_pre_transfer_callback(spi_transaction_t *t)
 {
@@ -179,13 +180,13 @@ void LCD_Config_ST7789(void)
 	LCD_GPIO_Init();//初始化GPIO;
 	//LCD_RES_Clr();
 	gpio_set_level(PIN_NUM_RST, 0);
-	vTaskDelay(100 / portTICK_RATE_MS);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
 	//LCD_RES_Set();
 	gpio_set_level(PIN_NUM_RST, 1);
-	vTaskDelay(100 / portTICK_RATE_MS);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
 
 	lcd_cmd(0x11);
-	vTaskDelay(120 / portTICK_RATE_MS);
+	vTaskDelay(120 / portTICK_PERIOD_MS);
 
 	lcd_cmd(0xB2);
 	lcd_data(0x0C);
@@ -264,7 +265,7 @@ void LCD_Config_ST7789(void)
 	lcd_data(0x2B);
 	lcd_data(0x2D);
 
-	vTaskDelay(100 / portTICK_RATE_MS);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
 	gpio_set_level(PIN_NUM_BCKL, 1);
 
 	lcd_cmd(0x21);
@@ -280,16 +281,16 @@ void LCD_Config(void)
 	LCD_GPIO_Init();//初始化GPIO;
 	//LCD_RES_Clr();
 	gpio_set_level(PIN_NUM_RST, 0);
-	vTaskDelay(100 / portTICK_RATE_MS);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
 	//LCD_RES_Set();
 	gpio_set_level(PIN_NUM_RST, 1);
-	vTaskDelay(100 / portTICK_RATE_MS);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
 
 	gpio_set_level(PIN_NUM_BCKL, 1);
-	vTaskDelay(100 / portTICK_RATE_MS);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
 
 	lcd_cmd(0x11);
-	vTaskDelay(120 / portTICK_RATE_MS);
+	vTaskDelay(120 / portTICK_PERIOD_MS);
 
 	//ST7735R Frame Rate
 	lcd_cmd(0xB1);
@@ -660,6 +661,14 @@ void Display_CE(uint16_t xes, uint16_t yes, char * Str, uint16_t color)
  * 下面的函数是图片显示，显示图标不影响背景；
  ***************************************************************************************************/
 //显示背景图片；
+//void LCD_Display_bmp54(const uint8_t *pic)
+//{
+//	for(uint32_t i = 0; i < LCD_H; i++)
+//	{
+//		memcpy(bmp54 + i * LCD_W * 2, pic  + i * LCD_W * 2, LCD_W * 2);
+//	}
+//}
+
 void LCD_Display(uint8_t xes, uint8_t yes, const uint8_t *pic)
 {
 	int len = 0;
@@ -696,6 +705,12 @@ void LCD_Display(uint8_t xes, uint8_t yes, const uint8_t *pic)
 //		}
 //	}
 }
+
+//void lcd_display_back(uint8_t xes, uint8_t yes, const uint8_t *pic)
+//{
+//	LCD_Display_bmp54(pic);
+//	LCD_Display(xes, yes, bmp54);
+//}
 
 void LCD_clear_nDisplay(uint8_t xes, uint8_t yes, const uint8_t *pic)//清除n行背景；清除半个屏幕，位置自定义；
 {

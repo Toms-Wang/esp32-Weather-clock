@@ -13,6 +13,11 @@
  */
 #include "weather.h"
 
+extern const uint8_t server_root_cert_pem_start[] asm("_binary_server_root_cert_pem_start");
+extern const uint8_t server_root_cert_pem_end[]   asm("_binary_server_root_cert_pem_end");
+
+extern const uint8_t local_server_cert_pem_start[] asm("_binary_local_server_cert_pem_start");
+extern const uint8_t local_server_cert_pem_end[]   asm("_binary_local_server_cert_pem_end");
 
 static const char *TAG = "example";
 
@@ -27,9 +32,16 @@ static uint8_t https_get_request(esp_tls_cfg_t cfg, char * pxcit, char * pxwea, 
     char buf[512];
     int ret, len;
 
-    struct esp_tls *tls = esp_tls_conn_http_new(WEB_URL, &cfg);
+//    struct esp_tls *tls = esp_tls_conn_http_new(WEB_URL, &cfg);
+    esp_tls_t *tls = esp_tls_init();
+    if (!tls)
+    {
+            ESP_LOGE(TAG, "Failed to allocate esp_tls handle!");
+            goto exit;
+	}
 
-    if (tls != NULL)
+//    if (tls != NULL)
+    if (esp_tls_conn_http_new_sync(WEB_URL, &cfg, tls) == 1)
     {
         ESP_LOGI(TAG, "Connection established..."); //连接建立服务
     }
@@ -160,7 +172,8 @@ static uint8_t https_get_request(esp_tls_cfg_t cfg, char * pxcit, char * pxwea, 
     } while (1);
 
 exit:
-    esp_tls_conn_delete(tls);
+esp_tls_conn_destroy(tls);
+//    esp_tls_conn_delete(tls);
 //    for (int countdown = 10; countdown >= 0; countdown--)
 //    {
 //        ESP_LOGI(TAG, "%d...", countdown);
@@ -186,6 +199,11 @@ uint8_t https_get_weather(uint8_t * pxcit, uint8_t * pxwea, uint8_t * pxtem)
 	{
 		.crt_bundle_attach = esp_crt_bundle_attach,
 	};
+//	ESP_LOGI(TAG, "https_request using cacert_buf");
+//	    esp_tls_cfg_t cfg = {
+//	        .cacert_buf = (const unsigned char *) server_root_cert_pem_start,
+//	        .cacert_bytes = server_root_cert_pem_end - server_root_cert_pem_start,
+//	    };
 
 	return https_get_request(cfg, (char*)pxcit, (char*)pxwea, (char*)pxtem);
 }
