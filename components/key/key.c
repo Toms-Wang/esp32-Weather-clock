@@ -7,7 +7,7 @@ static const char *TAG = "key";
 
 static QueueHandle_t gpio_evt_queue = NULL;
 
-extern const uint8_t *bmp_name[6];
+extern const uint8_t *bmp_name[7];
 extern uint8_t *back;
 extern uint8_t num;
 extern QueueHandle_t wifi_quent;
@@ -84,7 +84,7 @@ void key1_task(void *pvParameters)//鎸夐敭浠诲姟锛�
             printf("GPIO 38, val: %d\n", gpio_get_level(Key1_GPIO_PIN));
 
             num++;
-            num %= 6;
+            num %= 7;
             back = bmp_name[num];
             xQueueSend(wifi_quent, &send2, 10000);
 //            if(timeout_cnt <= 0)

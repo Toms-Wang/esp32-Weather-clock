@@ -44,6 +44,7 @@
 #include "bmp323.h"
 #include "bmp324.h"
 #include "bmp325.h"
+#include "bmp326.h"
 
 #include "sdmmc_cmd.h"
 #include "esp_vfs_fat.h"
@@ -59,6 +60,7 @@ uint8_t LCD_Flash_Status = 0;
 SemaphoreHandle_t BLUFI_sem = NULL;
 SemaphoreHandle_t Time_sem = NULL;
 SemaphoreHandle_t Weather_sem = NULL;
+SemaphoreHandle_t Week_sem = NULL;
 SemaphoreHandle_t Muxsem = NULL;
 
 QueueHandle_t wifi_quent;
@@ -68,7 +70,7 @@ TimerHandle_t weatherHandle;
 uint8_t update_weather_status = 0;
 uint8_t update_time_status = 0;
 
-const uint8_t *bmp_name[6] = { gImage_bmp320, gImage_bmp321, gImage_bmp322, gImage_bmp323, gImage_bmp324, gImage_bmp325};
+const uint8_t *bmp_name[7] = { gImage_bmp320, gImage_bmp321, gImage_bmp322, gImage_bmp323, gImage_bmp324, gImage_bmp325, gImage_bmp326};
 const uint8_t *back = NULL;
 uint8_t num = 0;
 
@@ -182,7 +184,9 @@ void time_update_task(void * parm)
 				time_update_first = true;
 				http_update_time();
 				gui_update_time(0, 0, back);
-				gui_update_week(0, 160, back);
+//				gui_update_week(0, 160, back);
+
+				xSemaphoreGive(Week_sem);
 			}
 			else
 			{
@@ -192,20 +196,35 @@ void time_update_task(void * parm)
 
 				if(tm3->tm_hour == 0 && tm3->tm_min == 0 && tm3->tm_sec <= 5)//00:00联网更新一次（也可能是二次）时间；
 				{
-					gui_update_week(0, 160, back);
-
+//					gui_update_week(0, 160, back);
+					xSemaphoreGive(Week_sem);
 				}
 
 				if(!week_update_first || week_update2)
 				{
 					week_update2 = 0;
 					week_update_first = true;
-					gui_update_week(0, 160, back);
+//					gui_update_week(0, 160, back);
+
+					xSemaphoreGive(Week_sem);
 				}
 			}
 
 			xSemaphoreGive(Muxsem);
 //			LCD_Flash_Status = 0;
+		}
+	}
+}
+
+void week_update_task(void * parm)
+{
+	while(1)
+	{
+		if(xSemaphoreTake(Week_sem, portMAX_DELAY) == pdTRUE)
+		{
+			xSemaphoreTake(Muxsem, portMAX_DELAY);
+			gui_update_week(0, 160, back);
+			xSemaphoreGive(Muxsem);
 		}
 	}
 }
@@ -251,11 +270,10 @@ void app_main(void)
 
     get_mac_address();
 
-
-
-    BLUFI_sem = xSemaphoreCreateBinary();
-    Time_sem = xSemaphoreCreateBinary();
+    BLUFI_sem 	= xSemaphoreCreateBinary();
+    Time_sem 	= xSemaphoreCreateBinary();
     Weather_sem = xSemaphoreCreateBinary();
+    Week_sem	= xSemaphoreCreateBinary();
 
     Muxsem = xSemaphoreCreateMutex();
     xSemaphoreGive(Muxsem);
@@ -267,6 +285,7 @@ void app_main(void)
 	xTaskCreate(BLUFI_INIT_Task, "BLUFI_INIT_Task", 4096, NULL, 6, NULL);
 	xTaskCreate(time_update_task, "time_update_task", 4096, NULL, 5, NULL);
 	xTaskCreate(weather_update_task, "weather_update_task", 8192, NULL, 4, NULL);
+	xTaskCreate(week_update_task, "week_update_task", 4096, NULL, 2, NULL);
 
 	TimerHandle_t timeHandle    = xTimerCreate("time_update", 5000, pdTRUE, NULL, time_update);
 	TimerHandle_t weatherHandle = xTimerCreate("weather_update", 5000 * 12 * 5, pdTRUE, NULL, weather_update);
