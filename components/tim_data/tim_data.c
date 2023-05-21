@@ -195,6 +195,8 @@ uint8_t http_get_time2(char * pxtim)
 						printf("week = %s\n", cjson_week->valuestring);
 
 						strcpy(pxtim + strlen(cjson_time->valuestring), cjson_week->valuestring);
+
+						printf("time = %s\n", pxtim);
                 	}
                 }
                 cJSON_Delete(root);

@@ -35,6 +35,7 @@ extern esp_blufi_extra_info_t gl_sta_conn_info;
 
 extern TimerHandle_t WIFI_Handle;
 
+uint8_t blufi_is_first = 0;
 //uint32_t Default_RTC_Sleep_Sec = 5 * 60;
 uint8_t  Custom_state = 0;
 char Custom_data[40] = {0};
@@ -74,7 +75,7 @@ void BLUFI_INIT_Task(void * arg)
     {
         if(xSemaphoreTake(BLUFI_sem, portMAX_DELAY) == pdTRUE)
         {
-        	printf("BLUFI_Task2");
+        	printf("Enter BLUFI_Task\n");
             blufi_config();
         }
     }
@@ -84,7 +85,7 @@ void blufi_adv_start(void)
 {
     char Blufi_device_name[20] = {0};
     strcpy(Blufi_device_name, "Disp_");
-    read_mac_address(Blufi_device_name + 6);
+    read_mac_address(Blufi_device_name + 5);
     esp_ble_gap_set_device_name(Blufi_device_name);
     esp_ble_gap_config_adv_data(&blufi_adv_data);
 }
@@ -358,7 +359,11 @@ void blufi_config(void)
 	printf("blufi config\n");
     esp_err_t ret;
 
-    ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
+    if(!blufi_is_first)
+    {
+    	ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
+    	blufi_is_first = 1;
+    }
 
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     ret = esp_bt_controller_init(&bt_cfg);
@@ -379,4 +384,48 @@ void blufi_config(void)
     }
 
     BLUFI_INFO("BLUFI VERSION %04x\n", esp_blufi_get_version());
+}
+
+esp_err_t ble_deinit(void)
+{
+    int ret;
+
+//    printf("1\n");
+    ret = esp_blufi_profile_deinit();
+    if (ret)
+    {
+        ESP_LOGD(TAG, "%s deinit  blufi profile failed: %s\n", __func__, esp_err_to_name(ret));
+        return -1;
+    }
+
+//    printf("2\n");
+    blufi_security_deinit();
+//    printf("3\n");
+    ret = esp_bluedroid_disable();
+    if (ret)
+    {
+        ESP_LOGD(TAG, "%s disable bluedroid failed: %s\n", __func__, esp_err_to_name(ret));
+        return -1;
+    }
+//    printf("4\n");
+    ret = esp_bluedroid_deinit();
+    if (ret) {
+        ESP_LOGD(TAG, "%s deinit bluedroid failed: %s\n", __func__, esp_err_to_name(ret));
+        return -1;
+    }
+//    printf("5\n");
+    ret = esp_bt_controller_disable();
+    if (ret) {
+        ESP_LOGD(TAG, "%s disable controller failed: %s\n", __func__, esp_err_to_name(ret));
+        return -1;
+    }
+//    printf("6\n");
+    ret = esp_bt_controller_deinit();
+    if (ret) {
+        ESP_LOGD(TAG, "%s deinit controller failed: %s\n", __func__, esp_err_to_name(ret));
+        return -1;
+    }
+//    printf("7\n");
+    ESP_LOGD(TAG, "ble deinit completed\n");
+    return 0;
 }

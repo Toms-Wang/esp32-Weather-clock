@@ -104,6 +104,7 @@ void http_update_time(void)//联网更新时间；
 	if(http_get_time2(tim))//获取时间；
 	{
 		ESP_LOGI(TAG1, "time update success");
+		printf("time = %s\n", tim);
 		setTime_str(tim);//更新时间；
 	}
 	else

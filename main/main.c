@@ -39,6 +39,11 @@
 #include "lwip/sockets.h"
 #include "smartconfig.h"
 #include "bmp320.h"
+#include "bmp321.h"
+#include "bmp322.h"
+#include "bmp323.h"
+#include "bmp324.h"
+#include "bmp325.h"
 
 #include "sdmmc_cmd.h"
 #include "esp_vfs_fat.h"
@@ -63,11 +68,19 @@ TimerHandle_t weatherHandle;
 uint8_t update_weather_status = 0;
 uint8_t update_time_status = 0;
 
+const uint8_t *bmp_name[6] = { gImage_bmp320, gImage_bmp321, gImage_bmp322, gImage_bmp323, gImage_bmp324, gImage_bmp325};
+const uint8_t *back = NULL;
+uint8_t num = 0;
+
+extern bool gl_sta_connected;
+uint8_t week_update2 = 0;
+
 static const char *TAG1 = "main";
 
 static void time_update(TimerHandle_t xTimer)
 {
 	(void)xTimer;
+//	printf("13\n");
 //	update_time_status = 1;
 	xSemaphoreGive(Time_sem);
 }
@@ -76,6 +89,7 @@ static void weather_update(TimerHandle_t xTimer)
 {
 	(void)xTimer;
 //	update_weather_status = 1;
+//	printf("14\n");
 	xSemaphoreGive(Weather_sem);
 }
 
@@ -90,22 +104,22 @@ void lcd_flash_task(void * parm)
 
 		if(flash_state == 6)
 		{
-			Display_CE_bc(48, 60, "wifi未连接, 请连接", WHITE, gImage_bmp320);
+			Display_CE_bc(48, 60, "wifi未连接, 请连接", WHITE, back);
 			flash_state = 0;
 		}
 
 		if(flash_state == 5)
 		{
-			Display_CE_bc(48, 60, "                   ", WHITE, gImage_bmp320);
+			Display_CE_bc(48, 60, "                   ", WHITE, back);
 
 			ESP_LOGI(TAG1, "receive queue, join in temperature update");
 
 			http_update_time();
 
-			gui_update_time(0, 0, gImage_bmp320);
-			gui_update_weather(120, 0, gImage_bmp320);
+			gui_update_time(0, 0, back);
+			gui_update_weather(120, 0, back);
 
-			gui_update_week(0, 160, gImage_bmp320);
+			gui_update_week(0, 160, back);
 
 			TimerHandle_t timeHandle = xTimerCreate("time_update", 5000, pdTRUE, NULL, time_update);
 			TimerHandle_t weatherHandle= xTimerCreate("weather_update", 5000 * 12 * 5, pdTRUE, NULL, weather_update);
@@ -120,26 +134,26 @@ void lcd_flash_task(void * parm)
 				if(update_weather_status)
 				{
 					update_weather_status = 0;
-					gui_update_weather(120, 0, gImage_bmp320);
+					gui_update_weather(120, 0, back);
 				}
 
 				if(update_time_status)
 				{
 					update_time_status = 0;
-					gui_update_time(0, 0, gImage_bmp320);
+					gui_update_time(0, 0, back);
 
 					struct tm* tm3 = get_tm_time();
 
 					if(tm3->tm_hour == 0 && tm3->tm_min == 0 && tm3->tm_sec <= 5)//00:00联网更新一次（也可能是二次）时间；
 					{
-						gui_update_week(0, 160, gImage_bmp320);
+						gui_update_week(0, 160, back);
 
 					}
 
 					if(!week_update)
 					{
 						week_update = 1;
-						gui_update_week(0, 160, gImage_bmp320);
+						gui_update_week(0, 160, back);
 					}
 				}
 			}
@@ -167,25 +181,26 @@ void time_update_task(void * parm)
 			{
 				time_update_first = true;
 				http_update_time();
-				gui_update_time(0, 0, gImage_bmp320);
-				gui_update_week(0, 160, gImage_bmp320);
+				gui_update_time(0, 0, back);
+				gui_update_week(0, 160, back);
 			}
 			else
 			{
-				gui_update_time(0, 0, gImage_bmp320);
+				gui_update_time(0, 0, back);
 
 				struct tm* tm3 = get_tm_time();
 
 				if(tm3->tm_hour == 0 && tm3->tm_min == 0 && tm3->tm_sec <= 5)//00:00联网更新一次（也可能是二次）时间；
 				{
-					gui_update_week(0, 160, gImage_bmp320);
+					gui_update_week(0, 160, back);
 
 				}
 
-				if(!week_update_first)
+				if(!week_update_first || week_update2)
 				{
+					week_update2 = 0;
 					week_update_first = true;
-					gui_update_week(0, 160, gImage_bmp320);
+					gui_update_week(0, 160, back);
 				}
 			}
 
@@ -208,7 +223,7 @@ void weather_update_task(void * parm)
 //			LCD_Flash_Status = 1;
 
 			xSemaphoreTake(Muxsem, portMAX_DELAY);
-			gui_update_weather(120, 0, gImage_bmp320);
+			gui_update_weather(120, 0, back);
 			xSemaphoreGive(Muxsem);
 
 //			LCD_Flash_Status = 0;
@@ -224,12 +239,19 @@ void app_main(void)
     LCD_Config_ST7789();
     spi_SD_init();
     Led_Config();
-	key_config();
-
+//	key_config();
+	key1_config();
 //	lcd_display_back(0, 0, gImage_bmp320);
-    gui_update_back(gImage_bmp320);
+//    gui_update_back(gImage_bmp320);
+	back = bmp_name[num];
+
+    gui_update_back(back);
 
     LED_OFF();
+
+    get_mac_address();
+
+
 
     BLUFI_sem = xSemaphoreCreateBinary();
     Time_sem = xSemaphoreCreateBinary();
@@ -242,7 +264,8 @@ void app_main(void)
 
 	Initialise_Wifi();
 
-	xTaskCreate(time_update_task, "time_update_task", 8192, NULL, 5, NULL);
+	xTaskCreate(BLUFI_INIT_Task, "BLUFI_INIT_Task", 4096, NULL, 6, NULL);
+	xTaskCreate(time_update_task, "time_update_task", 4096, NULL, 5, NULL);
 	xTaskCreate(weather_update_task, "weather_update_task", 8192, NULL, 4, NULL);
 
 	TimerHandle_t timeHandle    = xTimerCreate("time_update", 5000, pdTRUE, NULL, time_update);
@@ -252,24 +275,43 @@ void app_main(void)
     {
     	if(xQueueReceive(wifi_quent, &flash_state, portMAX_DELAY) == pdTRUE)
     	{
+//    		printf("9\n");
 
 			if(flash_state == 6)
 			{
-				Display_CE_bc(48, 60, "wifi未连接, 请连接", WHITE, gImage_bmp320);
+				xSemaphoreTake(Muxsem, portMAX_DELAY);
+				gui_update_back(back);
+				xSemaphoreGive(Muxsem);
+
+				if(gl_sta_connected)
+				{
+					xSemaphoreGive(Time_sem);
+					xSemaphoreGive(Weather_sem);
+	//				printf("12\n");
+					xTimerReset(timeHandle, 0);
+					xTimerReset(weatherHandle, 0);
+				}
+				week_update2 = 1;
+//				Display_CE_bc(48, 60, "wifi未连接, 请连接", WHITE, back);
 				flash_state = 0;
 			}
 
 			if(flash_state == 5)
 			{
-				Display_CE_bc(48, 60, "                   ", WHITE, gImage_bmp320);
+//				Display_CE_bc(48, 60, "                   ", WHITE, gImage_bmp320);
 
 				ESP_LOGI(TAG1, "receive queue, join in temperature update");
 
+//				printf("11\n");
 				xSemaphoreGive(Time_sem);
 				xSemaphoreGive(Weather_sem);
-
-				xTimerStart(timeHandle, 0);
-				xTimerStart(weatherHandle, 0);
+//				printf("12\n");
+				xTimerReset(timeHandle, 0);
+				xTimerReset(weatherHandle, 0);
+//				printf("10\n");
+//				xTimerStart(timeHandle, 0);
+//				xTimerStart(weatherHandle, 0);
+				flash_state = 0;
 			}
     	}
     }

@@ -37,6 +37,7 @@ char mac_address[13] = {0};
 extern void blufi_config(void);
 
 extern void ble_close(void);
+esp_err_t ble_deinit(void);
 
 static void ip_event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data);
@@ -56,8 +57,8 @@ static void wifi_timer(TimerHandle_t xTimer)
         {
             blufi_state = 1;
             xTimerReset(Blufi_Handle, 0);
-            blufi_config();
-//            xSemaphoreGive(BLUFI_sem);
+//            blufi_config();
+            xSemaphoreGive(BLUFI_sem);
         }
     }
 }
@@ -190,8 +191,16 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
             xTimerStop(WIFI_Handle, 0);
             xTimerStop(Blufi_Handle, 0);
 
+//            ble_close();
+            if(blufi_state)
+            {
+            	ble_deinit();
+            }
+
+            blufi_state = 0;
 
             int send2 = 5;
+//            printf("8\n");
             xQueueSend(wifi_quent, &send2, 10000);
 //            set_task_status(EV_SNTP_TASK);
 
@@ -229,16 +238,10 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
             printf("state = %d\n", blufi_state);
             if(blufi_state == 0)
             {
-                blufi_state = 1;
-              blufi_config();
-//                LED_ON();
-//                printf("1");
-                xTimerReset(Blufi_Handle, 0);
-//                xSemaphoreGiveFromISR(BLUFI_sem, pdTRUE);
+              blufi_state = 1;
+              xTimerReset(Blufi_Handle, 0);
+			  xSemaphoreGiveFromISR(BLUFI_sem, pdTRUE);
 //                xSemaphoreGive(BLUFI_sem);
-//                printf("2");
-//                set_task_status(EV_BLUFI_TASK);
-//                printf("3");
             }
         }
         break;
@@ -252,12 +255,15 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
 
         break;
     case WIFI_EVENT_STA_DISCONNECTED:
-    	if (gl_sta_connected == false && example_wifi_reconnect() == false)
-    	{
-			gl_sta_is_connecting = false;
-			disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
-			example_record_wifi_conn_info(disconnected_event->rssi, disconnected_event->reason);
-		}
+
+    	ESP_LOGI(TAG, "wifi disconnect!");
+
+//    	if (gl_sta_connected == false && example_wifi_reconnect() == false)
+//    	{
+//			gl_sta_is_connecting = false;
+//			disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
+//			example_record_wifi_conn_info(disconnected_event->rssi, disconnected_event->reason);
+//		}
         /* This is a workaround as ESP32 WiFi libs don't currently
            auto-reassociate. */
         gl_sta_connected = false;
@@ -265,6 +271,12 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         memset(gl_sta_bssid, 0, 6);
         gl_sta_ssid_len = 0;
         esp_wifi_connect();
+
+        if(blufi_state == 0)
+        {
+        	xTimerReset(WIFI_Handle, 0);
+        }
+
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
         break;
     case WIFI_EVENT_SCAN_DONE:
@@ -346,7 +358,7 @@ void Initialise_Wifi(void)
     ESP_ERROR_CHECK( esp_wifi_init(&cfg));
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA));
 
-    WIFI_Handle = xTimerCreate("wifi_timer", 1000 * 20, pdFALSE, NULL, wifi_timer);
+    WIFI_Handle = xTimerCreate("wifi_timer", 1000 * 5, pdFALSE, NULL, wifi_timer);
     Blufi_Handle = xTimerCreate("Blufi_timer", 1000 * 60, pdFALSE, NULL, Blufi_timer);
 
     ESP_ERROR_CHECK(esp_wifi_start());

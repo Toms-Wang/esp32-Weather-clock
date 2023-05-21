@@ -13,7 +13,7 @@ uint8_t color_t[LCD_W * 2] = {0};
 
 uint8_t bmp52[28810];//天气图标缓冲区；
 uint8_t bmp53[28810];
-//uint8_t bmp54[LCD_W * LCD_H * 2];
+//static uint8_t bmp54[LCD_W * LCD_H * 2];
 
 
 void lcd_spi_pre_transfer_callback(spi_transaction_t *t)

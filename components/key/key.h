@@ -12,6 +12,7 @@
 //#include "esp_event.h"
 #include "esp_log.h"
 #include "esp_system.h"
+#include "freertos/queue.h"
 //#include "nvs_flash.h"
 //#include "protocol_examples_common.h"
 //#include "esp_netif.h"
@@ -19,5 +20,6 @@
 
 
 void key_config(void);
+void key1_config(void);
 
 #endif
